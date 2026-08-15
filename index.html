@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CellWorks-lite</title>
+    
+    <!-- PWA & iOS Meta-Tags -->
+    <link rel="manifest" href="https://dm-technik.de/Apps/CellWorks-lite/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CellWorks">
+    <meta name="theme-color" content="#DC2626">
+
+    <!-- JsBarcode Bibliothek -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 20px; background-color: #F8FAFC; color: #1e293b; }
+        .card { background: white; border: 2px solid #000000; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; box-sizing: border-box; width: 90%; margin-left: auto; margin-right: auto; }
+        .card:active { background-color: #f1f5f9; }
+        .card.pinned { background-color: #fef9c3; border-color: #ca8a04; }
+        
+        .btn { display: block; width: 100%; padding: 10px 12px; margin-bottom: 14px; border: 2px solid #000000; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; text-align: center; box-shadow: 0 1px 0px #000000; }
+        
+        /* Barcode & Eingabefelder */
+        #barcode-input { width: 90%; margin: 0 auto 15px auto; display: block; padding: 16px; border: 2px solid #000000; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+        
+        .note-input-container { width: 90%; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+        .note-input, .note-textarea { width: 100%; padding: 14px; border: 2px solid #000000; border-radius: 8px; font-size: 16px; box-sizing: border-box; font-family: inherit; background: white; }
+        
+        /* Bildschirmfüllende Textarea für das Erstellen/Bearbeiten von Notizen */
+        .note-textarea-fullscreen { resize: none; flex-grow: 1; min-height: 250px; }
+        .fullscreen-form-wrapper { display: flex; flex-direction: column; width: 90%; margin: 0 auto; height: calc(100vh - 160px); box-sizing: border-box; gap: 12px; position: relative; }
+
+        /* Buttons auf der Hauptseite auf 75% Breite und zentriert */
+        .btn-half { width: 75%; margin-left: auto; margin-right: auto; }
+
+        /* Buttons auf der Einstellungsseite auf 50% Breite reduziert und zentriert */
+        .btn-settings-half { width: 50%; margin-left: auto; margin-right: auto; }
+
+        /* Speziell für den Installations-Button ganz oben (75% Breite & zentriert) */
+        .btn-small-half { width: 75%; margin: 10px auto; padding: 6px 10px; font-size: 11px; background-color: #f1f5f9; color: #475569; border: 2px solid #000000; border-radius: 6px; font-weight: bold; cursor: pointer; display: block; text-align: center; box-shadow: 0 1px 0px #000000; }
+
+        .btn-red-text { color: #DC2626; font-weight: 900; }
+
+        /* Speziell für den "Speichern" Button (50% Breite & zentriert) ohne rote Diskette */
+        .btn-save-centered { width: 50%; margin: 15px auto 8px auto; background-color: #2563EB; color: white; padding: 12px; border: 2px solid #000000; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; display: block; text-align: center; box-shadow: 0 1px 0px #000000; }
+
+        /* Speichern-Button oben rechts in der Zeile der Überschrift */
+        .btn-save-top-right { position: absolute; top: -5px; right: 0; background-color: #2563EB; color: white; padding: 6px 12px; border: 2px solid #000000; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; box-shadow: 0 1px 0px #000000; z-index: 10; }
+
+        /* Button zum Öffnen der Erstellungsseiten */
+        .btn-new-note { width: 90%; margin: 0 auto 15px auto; background-color: #2563EB; color: white; padding: 12px; border: 2px solid #000000; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; display: block; text-align: center; box-shadow: 0 1px 0px #000000; }
+
+        .btn-blue { background-color: #2563EB; color: white; }
+        .btn-grey { background-color: #4D4C4C; color: white; }
+        .btn-red { background-color: #DC2626; color: white; padding: 6px 10px; font-size: 12px; width: auto; border: 2px solid #000000; }
+        .btn-secondary { background-color: #64748b; color: white; padding: 6px 10px; font-size: 12px; width: auto; border: 2px solid #000000; }
+        .btn-yellow { background-color: #eab308; color: white; padding: 6px 10px; font-size: 12px; width: auto; border: 2px solid #000000; }
+        .btn-back { background-color: #e2e8f0; color: #475569; margin-bottom: 15px; border: 2px solid #000000; padding: 8px 12px; font-size: 14px; width: auto; display: block; }
+        
+        .action-row { display: flex; gap: 8px; margin-top: 8px; width: 100%; justify-content: center; align-items: center; }
+
+        /* Horizontale Aktionsleiste unten rechts für die Barcode-Vorschau */
+        .barcode-actions-bottom-right { position: absolute; bottom: 8px; right: 8px; display: flex; flex-direction: row; gap: 6px; z-index: 5; }
+        
+        /* Barcode SVG Styling für automatische Anpassung im Vorschaubereich */
+        .barcode-svg-preview { max-width: 100%; width: 100%; height: auto; max-height: 80px; box-sizing: border-box; }
+        .barcode-svg-detail { max-width: 100%; width: auto; height: auto; box-sizing: border-box; }
+
+        /* Roter Header-Bereich auf der Hauptseite */
+        .header-banner { background-color: #DC2626; border: 2px solid #000000; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+        h1 { font-size: 22px; color: #ffffff; margin: 0 0 5px 0; }
+        .author-sub { font-size: 12px; color: #ffffff; font-style: italic; margin: 0; }
+
+        .icon-large { font-size: 80px; color: #cbd5e1; display: block; text-align: center; margin: 20px 0; }
+        #app-view { margin-top: 20px; }
+        #ios-instruction { display: none; background: #eff6ff; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 13px; border: 2px solid #000000; }
+        
+        /* Notiz- & Passwort-spezifische UI Elemente */
+        .note-card { background: white; border: 2px solid #000000; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); width: 90%; margin-left: auto; margin-right: auto; box-sizing: border-box; cursor: pointer; position: relative; }
+        .note-card:active { background-color: #f1f5f9; }
+        .note-card.pinned { background-color: #fef9c3; border-color: #ca8a04; }
+        
+        /* Bildschirmfüllende Detailansicht */
+        .note-card-fullscreen { background: white; border: 2px solid #000000; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); width: 90%; margin: 0 auto; box-sizing: border-box; position: relative; display: flex; flex-direction: column; min-height: calc(100vh - 140px); }
+        .note-full-body-fullscreen { font-size: 15px; color: #1e293b; white-space: pre-wrap; word-break: break-word; margin: 15px 0; line-height: 1.5; flex-grow: 1; }
+
+        .note-preview-body { font-size: 14px; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px; padding-right: 110px; }
+        .note-full-body { font-size: 15px; color: #1e293b; white-space: pre-wrap; word-break: break-word; margin: 15px 0; line-height: 1.5; }
+        
+        .note-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; padding-right: 110px; }
+        .note-title { font-weight: bold; font-size: 16px; color: #0f172a; }
+        .note-date { font-size: 11px; color: #64748b; margin-bottom: 4px; }
+        
+        .notes-controls { width: 90%; margin: 0 auto 15px auto; display: flex; gap: 10px; }
+        .notes-search { flex: 2; padding: 8px 12px; border: 2px solid #000000; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        .notes-sort { flex: 1; padding: 8px; border: 2px solid #000000; border-radius: 6px; font-size: 14px; background: white; box-sizing: border-box; }
+
+        /* Bestätigungs-Overlay für Löschen */
+        .delete-confirm-box { background: #fee2e2; border: 2px solid #DC2626; padding: 12px; border-radius: 8px; margin-top: 15px; text-align: center; width: 100%; box-sizing: border-box; }
+        .delete-confirm-box p { margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #991b1b; }
+
+        /* Kalender & Layout */
+        .calendar-trigger-btn { background-color: white; border: 2px solid #000000; border-radius: 6px; width: 50%; margin: 0 auto 10px auto; padding: 10px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 1px 0px #000000; }
+        .fullscreen-card { background: white; border: 2px solid #000000; border-radius: 16px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; margin-top: 20px; overflow-x: auto; }
+        hr { border: none; border-top: 2px solid #000000; margin: 20px 0; }
+
+        /* Schichtplan Container */
+        .shift-container { display: flex; overflow-x: auto; gap: 12px; padding-bottom: 20px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+        .month-column { flex: 0 0 calc((100% - 24px) / 3); background: white; border: 2px solid #000; border-radius: 8px; padding: 8px; box-sizing: border-box; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .month-title { font-weight: bold; text-align: center; margin-bottom: 8px; font-size: 13px; border-bottom: 2px solid #000; padding-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #000000; }
+        .day-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; margin-bottom: 3px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid rgba(0,0,0,0.1); color: #000000; }
+        .shift-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; text-align: center; min-width: 16px; }
+        .F { background-color: #22c55e; } 
+        .S { background-color: #eab308; } 
+        .N { background-color: #3b82f6; } 
+        .X { background-color: #94a3b8; } 
+    </style>
+</head>
+<body onload="checkAutoExport(); initSwipeBack(); registerServiceWorker();">
+
+    <div id="main-menu">
+        <div class="header-banner">
+            <h1>CellWorks-lite</h1>
+            <p class="author-sub">by D. Piskol 2026</p>
+        </div>
+        
+        <div class="icon-large">🔋</div>
+        
+        <button class="btn-small-half" onclick="toggleIOSHint()"><span class="btn-red-text">Für iPhone.</span> Bitte antippen und lesen</button>
+        
+        <div id="ios-instruction">
+            <strong>Anleitung für iPhone:</strong><br>
+            1. Tippe unten auf den <strong>Teilen-Button</strong> (Quadrat mit Pfeil).<br>
+            2. Scrolle nach unten und wähle <strong>"Zum Home-Bildschirm"</strong>.<br>
+            3. Tippe auf "Hinzufügen".
+        </div>
+
+        <div style="height: 42px; margin-bottom: 14px;"></div>
+
+        <button class="btn btn-blue btn-half" onclick="showScreen('notes')">Notizen</button>
+        <button class="btn btn-blue btn-half" onclick="showScreen('barcodes')">Barcodes</button>
+        <button class="btn btn-blue btn-half" onclick="showScreen('passwords')">Passwörter</button>
+        
+        <hr style="width: 75%; margin: 15px auto;">
+        
+        <button class="btn btn-grey btn-half" onclick="showScreen('settings')">Einstellungen</button>
+        
+        <hr style="width: 75%; margin: 15px auto;">
+        
+        <button class="btn btn-blue btn-half" onclick="handleShiftplanClick()">Schichtplan</button>
+    </div>
+
+    <input type="file" id="import-file" style="display: none;" onchange="importData(event)" accept=".json">
+    <div id="app-view"></div>
+
+    <script>
+        // --- SERVICE WORKER REGISTRIERUNG ---
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('https://dm-technik.de/Apps/CellWorks-lite/sw.js')
+                    .then(reg => console.log('Service Worker registriert:', reg))
+                    .catch(err => console.error('Service Worker Fehler:', err));
+            }
+        }
+
+        const monthNames = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+        const weekdayNames = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+
+        let currentActiveScreen = 'menu';
+
+        // --- WISCH-BEWEGUNG NACH RECHTS LOGIK ---
+        function initSwipeBack() {
+            let touchStartX = 0;
+            let touchStartY = 0;
+
+            window.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+            }, false);
+
+            window.addEventListener('touchend', e => {
+                let touchEndX = e.changedTouches[0].screenX;
+                let touchEndY = e.changedTouches[0].screenY;
+                
+                let diffX = touchEndX - touchStartX;
+                let diffY = Math.abs(touchEndY - touchStartY);
+
+                if (diffX > 70 && diffY < 60) {
+                    if (currentActiveScreen !== 'menu') {
+                        handleSwipeNavigation();
+                    }
+                }
+            }, false);
+        }
+
+        function handleSwipeNavigation() {
+            if (currentActiveScreen === 'notes_add' || currentActiveScreen === 'notes_edit' || currentActiveScreen === 'notes_detail') {
+                showScreen('notes');
+            } else if (currentActiveScreen === 'passwords_add' || currentActiveScreen === 'passwords_edit' || currentActiveScreen === 'passwords_detail') {
+                showScreen('passwords');
+            } else if (currentActiveScreen === 'barcodes_add' || currentActiveScreen === 'barcodes_edit' || currentActiveScreen === 'barcodes_detail') {
+                showScreen('barcodes');
+            } else if (currentActiveScreen === 'settings_shift_date' || currentActiveScreen === 'settings_auto_export' || currentActiveScreen === 'first_shift_date' || currentActiveScreen === 'agb') {
+                showScreen('settings');
+            } else if (currentActiveScreen === 'shiftplan') {
+                return;
+            } else {
+                backToMenu();
+            }
+        }
+
+        function toggleIOSHint() {
+            const hint = document.getElementById('ios-instruction');
+            hint.style.display = hint.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // --- SPEICHERFUNKTIONEN ---
+        function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+        function loadData(key) { return JSON.parse(localStorage.getItem(key)) || []; }
+
+        // --- AUTOMATISCHER EXPORT LOGIK ---
+        function triggerExportAsFile(isAutomatic = false) {
+            const fullData = { notes: loadData('notes'), barcodes: loadData('barcodes'), passwords: loadData('passwords'), shift_start_date: localStorage.getItem('shift_start_date') };
+            const blob = new Blob([JSON.stringify(fullData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            
+            const dateStr = new Date().toISOString().slice(0, 10);
+            a.download = isAutomatic ? `CellWorks_AutoBackup_${dateStr}.json` : 'CellWorks_Backup.json';
+            
+            a.click();
+            
+            if (isAutomatic) {
+                localStorage.setItem('last_auto_export', Date.now().toString());
+            }
+        }
+
+        function checkAutoExport() {
+            const interval = localStorage.getItem('auto_export_interval') || 'off';
+            if (interval === 'off') return;
+
+            const lastExport = parseInt(localStorage.getItem('last_auto_export') || '0', 10);
+            const now = Date.now();
+            let intervalMs = 0;
+
+            if (interval === '5min') intervalMs = 5 * 60 * 1000;
+            if (interval === '15min') intervalMs = 15 * 60 * 1000;
+            if (interval === 'daily') intervalMs = 24 * 60 * 60 * 1000;
+            if (interval === 'weekly') intervalMs = 7 * 24 * 60 * 60 * 1000;
+            if (interval === 'monthly') intervalMs = 30 * 24 * 60 * 60 * 1000;
+
+            if (now - lastExport > intervalMs) {
+                triggerExportAsFile(true);
+            }
+        }
+
+        // --- NOTIZEN LOGIK ---
+        function showAddNoteScreen() {
+            currentActiveScreen = 'notes_add';
+            const container = document.getElementById('app-view');
+            container.innerHTML = `
+                <button class="btn btn-back" onclick="showScreen('notes')">← Zurück zur Notizen-Übersicht</button>
+                <div style="position: relative; margin-bottom: 15px;">
+                    <h2 style="margin: 0; line-height: 32px;">Neue Notiz erstellen</h2>
+                    <button class="btn-save-top-right" onclick="addNote()">Speichern</button>
+                </div>
+                <div class="fullscreen-form-wrapper" style="width: 100%; margin: 0;">
+                    <input type="text" id="note-title-input" class="note-input" placeholder="Titel der Notiz...">
+                    <textarea id="note-text-input" class="note-textarea note-textarea-fullscreen" placeholder="Schreibe hier deine Notiz..."></textarea>
+                </div>
+            `;
+        }
+
+        function addNote() {
+            const titleInput = document.getElementById('note-title-input');
+            const textInput = document.getElementById('note-text-input');
+            const title = titleInput.value.trim();
+            const text = textInput.value.trim();
+
+            if (!title && !text) {
+                alert("Bitte Titel oder Notiztext eingeben.");
+                return;
+            }
+
+            let notes = loadData('notes');
+            const newNote = {
+                id: Date.now(),
+                title: title || 'Ohne Titel',
+                text: text,
+                date: new Date().toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }),
+                timestamp: Date.now(),
+                pinned: false
+            };
+
+            notes.unshift(newNote);
+            saveData('notes', notes);
+            showScreen('notes');
+        }
+
+        function showEditNoteScreen(id, event) {
+            if (event) event.stopPropagation();
+            currentActiveScreen = 'notes_edit';
+            let notes = loadData('notes');
+            const note = notes.find(n => n.id === id);
+            if (!note) return;
+
+            const container = document.getElementById('app-view');
+            container.innerHTML = `
+                <button class="btn btn-back" onclick="showScreen('notes')">← Zurück zur Notizen-Übersicht</button>
+                <div style="position: relative; margin-bottom: 15px;">
+                    <h2 style="margin: 0; line-height: 32px;">Notiz bearbeiten</h2>
+                    <button class="btn-save-top-right" onclick="updateNote(${note.id})">Speichern</button>
+                </div>
+                <div class="fullscreen-form-wrapper" style="width: 100%; margin: 0;">
+                    <input type="text" id="note-title-edit" class="note-input" value="${note.title}" placeholder="Titel der Notiz...">
+                    <textarea id="note-text-edit" class="note-textarea note-textarea-fullscreen" placeholder="Schreibe hier deine Notiz...">${note.text}</textarea>
+                </div>
+            `;
+        }
+
+        function updateNote(id) {
+            const titleInput = document.getElementById('note-title-edit');
+            const textInput = document.getElementById('note-text-edit');
+            const title = titleInput.value.trim();
+            const text = textInput.value.trim();
+
+            if (!title && !text) {
+                alert("Bitte Titel oder Notiztext eingeben.");
+                return;
+            }
+
+            let notes = loadData('notes');
+            const note = notes.find(n => n.id === id);
+            if (note) {
+                note.title = title || 'Ohne Titel';
+                note.text = text;
+                note.date = new Date().toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
+                saveData('notes', notes);
+            }
+            showScreen('notes');
+        }
+
+        function togglePinNote(id, event) {
+            if (event) event.stopPropagation();
+            let notes = loadData('notes');
+            const note = notes.find(n => n.id === id);
+            if (note) {
+                note.pinned = !note.pinned;
+                saveData('notes', notes);
+                renderNotes();
+            }
+        }
+
+        function showSingleNote(id) {
+            currentActiveScreen = 'notes_detail';
+            let notes = loadData('notes');
+            const note = notes.find(n => n.id === id);
+            if (!note) return;
+
+            const container = document.getElementById('app-view');
+            container.innerHTML = `
+                <button class="btn btn-back" onclick="showScreen('notes')">← Zurück zur Übersicht</button>
+                <div class="note-card-fullscreen ${note.pinned ? 'pinned' : ''}" style="cursor: default;">
+                    <button class="btn ${note.pinned ? 'btn-yellow' : 'btn-secondary'}" style="position: absolute; top: 10px; right: 10px; width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="togglePinNote(${note.id}); showSingleNote(${note.id});" title="${note.pinned ? 'Loslösen' : 'Anpinnen'}">
+                        📌
+                    </button>
+                    <button class="btn btn-secondary" style="position: absolute; top: 40px; right: 10px; width: auto; padding: 3px 6px; font-size: 12px; margin: 0;" onclick="showEditNoteScreen(${note.id})" title="Notiz bearbeiten">
+                        ✏️
+                    </button>
+                    <button class="btn btn-red" style="position: absolute; top: 70px; right: 10px; width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="showDeleteConfirmDetail(${note.id})" title="Notiz löschen">
+                        <span style="color: #ef4444;">🗑️</span>
+                    </button>
+                    
+                    <div class="note-header" style="padding-right: 50px;">
+                        <span class="note-title" style="font-size: 20px;">${note.title}</span>
+                    </div>
+                    <div class="note-date">${note.date}</div>
+                    <div class="note-full-body-fullscreen">${note.text}</div>
+                    
+                    <hr style="margin: 15px 0;">
+                    
+                    <div id="delete-area-detail-${note.id}" style="text-align: center;"></div>
+                </div>
+            `;
+        }
+
+        function showDeleteConfirmDetail(id) {
+            const deleteArea = document.getElementById(`delete-area-detail-${id}`);
+            if (!deleteArea) return;
+            deleteArea.innerHTML = `
+                <div class="delete-confirm-box">
+                    <p>Möchtest du diese Notiz wirklich unwiderruflich löschen?</p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button class="btn btn-red" style="margin:0; width: auto;" onclick="deleteNoteAndReturn(${id})">Ja, löschen</button>
+                        <button class="btn btn-secondary" style="margin:0; width: auto;" onclick="showSingleNote(${id})">Abbrechen</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showListDeleteConfirm(id, event) {
+            event.stopPropagation();
+            const actionArea = document.getElementById(`list-action-${id}`);
+            actionArea.innerHTML = `
+                <div class="delete-confirm-box" onclick="event.stopPropagation()">
+                    <p style="font-size: 12px; margin-bottom: 6px;">Löschen bestätigen?</p>
+                    <div style="display: flex; gap: 6px; justify-content: center;">
+                        <button class="btn btn-red" style="margin:0; padding: 4px 8px; font-size: 11px; width: auto;" onclick="deleteNoteFromList(${id}, event)">Ja</button>
+                        <button class="btn btn-secondary" style="margin:0; padding: 4px 8px; font-size: 11px; width: auto;" onclick="renderNotes()">Nein</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function deleteNoteFromList(id, event) {
+            event.stopPropagation();
+            let notes = loadData('notes');
+            notes = notes.filter(n => n.id !== id);
+            saveData('notes', notes);
+            renderNotes();
+        }
+
+        function deleteNoteAndReturn(id) {
+            let notes = loadData('notes');
+            notes = notes.filter(n => n.id !== id);
+            saveData('notes', notes);
+            showScreen('notes');
+        }
+
+        function renderNotes() {
+            let notes = loadData('notes');
+            const listContainer = document.getElementById('notes-list-container');
+            const searchVal = (document.getElementById('notes-search-input')?.value || '').toLowerCase();
+            const sortVal = document.getElementById('notes-sort-select')?.value || 'newest';
+
+            let filtered = notes.filter(n => 
+                n.title.toLowerCase().includes(searchVal) || n.text.toLowerCase().includes(searchVal)
+            );
+
+            filtered.sort((a, b) => {
+                if (a.pinned && !b.pinned) return -1;
+                if (!a.pinned && b.pinned) return 1;
+
+                if (sortVal === 'newest') return b.timestamp - a.timestamp;
+                if (sortVal === 'oldest') return a.timestamp - b.timestamp;
+                if (sortVal === 'alpha') return a.title.localeCompare(b.title);
+            });
+
+            let html = `
+                <button class="btn-new-note" onclick="showAddNoteScreen()">+ Neue Notiz erstellen</button>
+                <div class="notes-controls">
+                    <input type="text" id="notes-search-input" class="notes-search" placeholder="🔍 Suchen..." value="${searchVal}" oninput="renderNotes()">
+                    <select id="notes-sort-select" class="notes-sort" onchange="renderNotes()">
+                        <option value="newest" ${sortVal === 'newest' ? 'selected' : ''}>Neueste zuerst</option>
+                        <option value="oldest" ${sortVal === 'oldest' ? 'selected' : ''}>Älteste zuerst</option>
+                        <option value="alpha" ${sortVal === 'alpha' ? 'selected' : ''}>Alphabetisch</option>
+                    </select>
+                </div>
+                <hr style="margin: 15px 0;">
+            `;
+
+            if (filtered.length === 0) {
+                html += `<p style="text-align: center; color: #64748b;">Keine Notizen gefunden.</p>`;
+            } else {
+                filtered.forEach(n => {
+                    html += `
+                        <div class="note-card ${n.pinned ? 'pinned' : ''}" onclick="showSingleNote(${n.id})">
+                            <button class="btn ${n.pinned ? 'btn-yellow' : 'btn-secondary'}" style="position: absolute; top: 10px; right: 10px; width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="togglePinNote(${n.id}, event)" title="${n.pinned ? 'Loslösen' : 'Anpinnen'}">
+                                📌
+                            </button>
+                            <button class="btn btn-secondary" style="position: absolute; top: 40px; right: 10px; width: auto; padding: 3px 6px; font-size: 12px; margin: 0;" onclick="showEditNoteScreen(${n.id}, event)" title="Notiz bearbeiten">
+                                ✏️
+                            </button>
+                            <button class="btn btn-red" style="position: absolute; top: 70px; right: 10px; width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="showListDeleteConfirm(${n.id}, event)" title="Notiz löschen">
+                                <span style="color: #ef4444;">🗑️</span>
+                            </button>
+
+                            <div class="note-header" style="padding-right: 50px;">
+                                <span class="note-title">${n.title}</span>
+                            </div>
+                            <div class="note-date">${n.date}</div>
+                            <div class="note-preview-body" style="padding-right: 50px;">${n.text}</div>
+                            
+                            <div class="action-row" id="list-action-${n.id}"></div>
+                        </div>
+                    `;
+                });
+            }
+
+            listContainer.innerHTML = html;
+        }
+
+        // --- PASSWÖRTER LOGIK ---
+        let pwdVisibilityState = {};
+
+        function convertPasswordToBarcode(id, event) {
+            if (event) event.stopPropagation();
+            let passwords = loadData('passwords');
+            const pwd = passwords.find(p => p.id === id);
+            if (!pwd || !pwd.password) {
+                alert("Kein Passwort zum Umwandeln vorhanden.");
+                return;
+            }
+
+            let barcodes = loadData('barcodes');
+            barcodes.unshift({
+                id: Date.now(),
+                value: pwd.password,
+                pinned: false
+            });
+            saveData('barcodes', barcodes);
+            alert(`Passwort für "${pwd.title}" wurde als Barcode hinzugefügt!`);
+        }
+
+        function showAddPasswordScreen() {
+            currentActiveScreen = 'passwords_add';
+            const container = document.getElementById('app-view');
+            container.innerHTML = `
+                <button class="btn btn-back" onclick="showScreen('passwords')">← Zurück zur Passwort-Übersicht</button>
+                <h2>Neues Passwort erstellen</h2>
+                <div class="note-input-container">
+                    <input type="text" id="pwd-title-input" class="note-input" placeholder="Titel (z. B. Google, Bank)...">
+                    <input type="text" id="pwd-user-input" class="note-input" placeholder="Benutzername / eMail...">
+                    <input type="text" id="pwd-pass-input" class="note-input" placeholder="Passwort...">
+                    <button class="btn-save-centered" onclick="addPassword()"><span style="color: #ef4444;">💾</span> Speichern</button>
+                </div>
+            `;
+        }
+
+        function addPassword() {
+            const titleInput = document.getElementById('pwd-title-input');
+            const userInput = document.getElementById('pwd-user-input');
+            const passInput = document.getElementById('pwd-pass-input');
+            
+            const title = titleInput.value.trim();
+            const username = userInput.value.trim();
+            const password = passInput.value.trim();
+
+            if (!title && !username && !password) {
+                alert("Bitte mindestens ein Feld ausfüllen.");
+                return;
+            }
+
+            let passwords = loadData('passwords');
+            const newPwd = {
+                id: Date.now(),
+                title: title || 'Ohne Titel',
+                username: username,
+                password: password,
+                timestamp: Date.now(),
+                pinned: false
+            };
+
+            passwords.unshift(newPwd);
+            saveData('passwords', passwords);
+            showScreen('passwords');
+        }
+
+        function showEditPasswordScreen(id, event) {
+            if (event) event.stopPropagation();
+            currentActiveScreen = 'passwords_edit';
+            let passwords = loadData('passwords');
+            const pwd = passwords.find(p => p.id === id);
+            if (!pwd) return;
+
+            const container = document.getElementById('app-view');
+            container.innerHTML = `
+                <button class="btn btn-back" onclick="showSinglePassword(${pwd.id})">← Zurück zur Detailansicht</button>
+                <h2>Passwort bearbeiten</h2>
+                <div class="note-input-container">
+                    <input type="text" id="pwd-title-edit" class="note-input" value="${pwd.title}" placeholder="Titel...">
+                    <input type="text" id="pwd-user-edit" class="note-input" value="${pwd.username}" placeholder="Benutzername / eMail...">
+                    <input type="text" id="pwd-pass-edit" class="note-input" value="${pwd.password}" placeholder="Passwort...">
+                    <button class="btn-save-centered" onclick="updatePassword(${pwd.id})"><span style="color: #ef4444;">💾</span> Änderungen speichern</button>
+                </div>
+            `;
+        }
+
+        function updatePassword(id) {
+            const titleInput = document.getElementById('pwd-title-edit');
+            const userInput = document.getElementById('pwd-user-edit');
+            const passInput = document.getElementById('pwd-pass-edit');
+
+            const title = titleInput.value.trim();
+            const username = userInput.value.trim();
+            const password = passInput.value.trim();
+
+            if (!title && !username && !password) {
+                alert("Bitte mindestens ein Feld ausfüllen.");
+                return;
+            }
+
+            let passwords = loadData('passwords');
+            const pwd = passwords.find(p => p.id === id);
+            if (pwd) {
+                pwd.title = title || 'Ohne Titel';
+                pwd.username = username;
+                pwd.password = password;
+                saveData('passwords', passwords);
+            }
+            showSinglePassword(id);
+        }
+
+        function togglePinPassword(id, event) {
+            if (event) event.stopPropagation();
+            let passwords = loadData('passwords');
+            const pwd = passwords.find(p => p.id === id);
+            if (pwd) {
+                pwd.pinned = !pwd.pinned;
+                saveData('passwords', passwords);
+                renderPasswords();
+            }
+        }
+
+        function togglePasswordVisibilityInList(id, event) {
+            if (event) event.stopPropagation();
+            pwdVisibilityState[id] = !pwdVisibilityState[id];
+            renderPasswords();
+        }
+
+        function showSinglePassword(id) {
+            currentActiveScreen = 'passwords_detail';
+            let passwords = loadData('passwords');
+            const pwd = passwords.find(p => p.id === id);
+            if (!pwd) return;
+
+            const container = document.getElementById('app-view');
+            container.innerHTML = `
+                <button class="btn btn-back" onclick="showScreen('passwords')">← Zurück zur Passwort-Übersicht</button>
+                <div class="note-card-fullscreen ${pwd.pinned ? 'pinned' : ''}" style="cursor: default;">
+                    <button class="btn ${pwd.pinned ? 'btn-yellow' : 'btn-secondary'}" style="position: absolute; top: 10px; right: 10px; width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="togglePinPassword(${pwd.id}); showSinglePassword(${pwd.id});" title="${pwd.pinned ? 'Loslösen' : 'Anpinnen'}">
+                        📌
+                    </button>
+                    <button class="btn btn-secondary" style="position: absolute; top: 40px; right: 10px; width: auto; padding: 3px 6px; font-size: 12px; margin: 0;" onclick="showEditPasswordScreen(${pwd.id})" title="Passwort bearbeiten">
+                        ✏️
+                    </button>
+                    <button class="btn btn-red" style="position: absolute; top: 70px; right: 10px; width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="showDeleteConfirmDetailPassword(${pwd.id})" title="Passwort löschen">
+                        <span style="color: #ef4444;">🗑️</span>
+                    </button>
+                    <button class="btn btn-secondary" style="position: absolute; top: 100px; right: 10px; width: auto; padding: 3px 6px; font-size: 12px; margin: 0;" onclick="convertPasswordToBarcode(${pwd.id})" title="Als Barcode speichern">
+                        📊
+                    </button>
+
+                    <div class="note-header" style="padding-right: 50px;">
+                        <span class="note-title" style="font-size: 20px;">${pwd.title}</span>
+                    </div>
+
+                    <div class="note-full-body-fullscreen">
+                        <p style="margin: 10px 0;"><strong>Benutzername / eMail:</strong><br>${pwd.username || '-'}</p>
+                        <p style="margin: 10px 0;"><strong>Passwort:</strong><br>${pwd.password || '-'}</p>
+                    </div>
+
+                    <hr style="margin: 15px 0;">
+                    <div id="delete-area-pwd-${pwd.id}" style="text-align: center;"></div>
+                </div>
+            `;
+        }
+
+        function showDeleteConfirmDetailPassword(id) {
+            const deleteArea = document.getElementById(`delete-area-pwd-${id}`);
+            if (!deleteArea) return;
+            deleteArea.innerHTML = `
+                <div class="delete-confirm-box">
+                    <p>Möchtest du dieses Passwort wirklich unwiderruflich löschen?</p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button class="btn btn-red" style="margin:0; width: auto;" onclick="deletePasswordAndReturn(${id})">Ja, löschen</button>
+                        <button class="btn btn-secondary" style="margin:0; width: auto;" onclick="showSinglePassword(${id})">Abbrechen</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function deletePasswordAndReturn(id) {
+            let passwords = loadData('passwords');
+            passwords = passwords.filter(p => p.id !== id);
+            saveData('passwords', passwords);
+            showScreen('passwords');
+        }
+
+        function renderPasswords() {
+            let passwords = loadData('passwords');
+            const listContainer = document.getElementById('passwords-list-container');
+            const searchVal = (document.getElementById('pwd-search-input')?.value || '').toLowerCase();
+            const sortVal = document.getElementById('pwd-sort-select')?.value || 'newest';
+
+            let filtered = passwords.filter(p => 
+                p.title.toLowerCase().includes(searchVal) || 
+                (p.username && p.username.toLowerCase().includes(searchVal))
+            );
+
+            filtered.sort((a, b) => {
+                if (a.pinned && !b.pinned) return -1;
+                if (!a.pinned && b.pinned) return 1;
+
+                if (sortVal === 'newest') return b.timestamp - a.timestamp;
+                if (sortVal === 'oldest') return a.timestamp - b.timestamp;
+                if (sortVal === 'alpha') return a.title.localeCompare(b.title);
+            });
+
+            let html = `
+                <button class="btn-new-note" onclick="showAddPasswordScreen()">+ Neues Passwort erstellen</button>
+                <div class="notes-controls">
+                    <input type="text" id="pwd-search-input" class="notes-search" placeholder="🔍 Suchen..." value="${searchVal}" oninput="renderPasswords()">
+                    <select id="pwd-sort-select" class="notes-sort" onchange="renderPasswords()">
+                        <option value="newest" ${sortVal === 'newest' ? 'selected' : ''}>Neueste zuerst</option>
+                        <option value="oldest" ${sortVal === 'oldest' ? 'selected' : ''}>Älteste zuerst</option>
+                        <option value="alpha" ${sortVal === 'alpha' ? 'selected' : ''}>Alphabetisch</option>
+                    </select>
+                </div>
+                <hr style="margin: 15px 0;">
+            `;
+
+            if (filtered.length === 0) {
+                html += `<p style="text-align: center; color: #64748b;">Keine Passwörter gefunden.</p>`;
+            } else {
+                filtered.forEach(p => {
+                    const isVisible = !!pwdVisibilityState[p.id];
+                    const maskedPass = p.password ? '•'.repeat(Math.max(p.password.length, 6)) : '••••••';
+                    const displayPassText = isVisible ? p.password : maskedPass;
+
+                    html += `
+                        <div class="note-card ${p.pinned ? 'pinned' : ''}" onclick="showSinglePassword(${p.id})">
+                            <button class="btn ${p.pinned ? 'btn-yellow' : 'btn-secondary'}" style="position: absolute; top: 10px; right: 10px; width: auto; padding: 2px 6px; font-size: 14px; margin: 0;" onclick="togglePinPassword(${p.id}, event)" title="${p.pinned ? 'Loslösen' : 'Anpinnen'}">
+                                📌
+                            </button>
+                            <button class="btn btn-secondary" style="position: absolute; top: 40px; right: 10px; width: auto; padding: 2px 6px; font-size: 14px; margin: 0;" onclick="togglePasswordVisibilityInList(${p.id}, event)" title="Passwort anzeigen/verbergen">
+                                ${isVisible ? '🙈' : '👁️'}
+                            </button>
+                            <button class="btn btn-secondary" style="position: absolute; top: 70px; right: 10px; width: auto; padding: 2px 6px; font-size: 14px; margin: 0;" onclick="convertPasswordToBarcode(${p.id}, event)" title="Als Barcode speichern">
+                                📊
+                            </button>
+
+                            <div class="note-header">
+                                <span class="note-title">${p.title}</span>
+                            </div>
+                            <div class="note-preview-body" style="padding-right: 50px;">
+                                <strong>Benutzer:</strong> ${p.username || '-'}<br>
+                                <strong>Passwort:</strong> ${displayPassText}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            listContainer.innerHTML = html;
+        }
+
+        // --- BARCODE LOGIK ---
+        function showAddBarcodeScreen() {
+            currentActiveScreen = 'barcodes_add';
+            const container = document.getElementById('app-view');
+            container.innerHTML = `
+                <button class="btn btn-back" onclick="showScreen('barcodes')">← Zurück zur Barcode-Übersicht</button>
+                <h2>Neuen Barcode erstellen</h2>
+                <div class="note-input-container">
+                    <input type="text" id="barcode-text-input" class="note-input" placeholder="Text für Barcode hier eingeben...">
+                    <button class="btn-save-centered" onclick="addBarcode()"><span style="color: #ef4444;">💾</span> Speichern</button>
+                </div>
+            `;
+        }
+
+        function addBarcode() {
+            const inputField = document.getElementById('barcode-text-input');
+            const val = inputField.value.trim();
+            if (!val) return;
+            const list = loadData('barcodes');
+            list.unshift({
+                id: Date.now(),
+                value: val,
+                pinned: false
+            });
+            saveData('barcodes', list);
+            showScreen('barcodes');
+        }
+
+        function showEditBarcodeScreen(id, event) {
+            if (event) event.stopPropagation();
+            currentActiveScreen = 'barcodes_edit';
+            let list = loadData('barcodes');
+            const barcode = list.find(b => b.id === id);
+            if (!barcode) return;
+
+            const container = document.getElementById('app-view');
+            container.innerHTML = `
+                <button class="btn btn-back" onclick="showScreen('barcodes')">← Zurück zur Barcode-Übersicht</button>
+                <h2>Barcode bearbeiten</h2>
+                <div class="note-input-container">
+                    <input type="text" id="barcode-text-edit" class="note-input" value="${barcode.value}" placeholder="Text für Barcode...">
+                    <button class="btn-save-centered" onclick="updateBarcode(${barcode.id})"><span style="color: #ef4444;">💾</span> Änderungen speichern</button>
+                </div>
+            `;
+        }
+
+        function updateBarcode(id) {
+            const inputField = document.getElementById('barcode-text-edit');
+            const val = inputField.value.trim();
+            if (!val) {
+                alert("Bitte Text eingeben.");
+                return;
+            }
+            let list = loadData('barcodes');
+            const barcode = list.find(b => b.id === id);
+            if (barcode) {
+                barcode.value = val;
+                saveData('barcodes', list);
+            }
+            showScreen('barcodes');
+        }
+
+        function togglePinBarcode(id, event) {
+            if (event) event.stopPropagation();
+            let list = loadData('barcodes');
+            const barcode = list.find(b => (b.id !== undefined ? b.id === id : list.indexOf(b) === id));
+            if (barcode) {
+                barcode.pinned = !barcode.pinned;
+                saveData('barcodes', list);
+                renderBarcodes();
+            }
+        }
+
+        function showBarcodeDeleteConfirm(id, event) {
+            if (event) event.stopPropagation();
+            const actionRow = document.getElementById(`barcode-action-row-${id}`);
+            actionRow.innerHTML = `
+                <div class="delete-confirm-box" onclick="event.stopPropagation()">
+                    <p style="font-size: 12px; margin-bottom: 6px;">Löschen bestätigen?</p>
+                    <div style="display: flex; gap: 6px; justify-content: center;">
+                        <button class="btn btn-red" style="margin:0; padding: 4px 8px; font-size: 11px; width: auto;" onclick="deleteBarcode(${id}, event)">Ja</button>
+                        <button class="btn btn-secondary" style="margin:0; padding: 4px 8px; font-size: 11px; width: auto;" onclick="renderBarcodes()">Nein</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function deleteBarcode(id, event) {
+            if (event) event.stopPropagation();
+            let list = loadData('barcodes');
+            list = list.filter(b => (b.id !== undefined ? b.id !== id : list.indexOf(b) !== id));
+            saveData('barcodes', list);
+            renderBarcodes();
+        }
+
+        function showSingleBarcode(val) {
+            currentActiveScreen = 'barcodes_detail';
+            const container = document.getElementById('app-view');
+
+            container.innerHTML = `
+                <button class="btn btn-back" onclick="showScreen('barcodes')">← Zurück zur Liste</button>
+                <h2>Barcode Ansicht</h2>
+                <div class="fullscreen-card">
+                    <svg id="single-barcode" class="barcode-svg-detail"></svg>
+                </div>
+            `;
+
+            try {
+                JsBarcode("#single-barcode", val, { format: "CODE128", width: 3, height: 100, displayValue: false, flat: false });
+            } catch (e) {
+                console.error("Fehler beim Rendern:", val, e);
+            }
+        }
+
+        function renderBarcodes() {
+            let barcodes = loadData('barcodes');
+            
+            barcodes = barcodes.map((b, idx) => {
+                if (typeof b === 'string') {
+                    return { id: Date.now() + idx, value: b, pinned: false };
+                }
+                if (b.id === undefined) {
+                    b.id = Date.now() + idx;
+                }
+                return b;
+            });
+            saveData('barcodes', barcodes);
+
+            barcodes.sort((a, b) => {
+                if (a.pinned && !b.pinned) return -1;
+                if (!a.pinned && b.pinned) return 1;
+                return 0;
+            });
+
+            const listContainer = document.getElementById('list');
+            
+            let html = `
+                <button class="btn-new-note" onclick="showAddBarcodeScreen()">+ Neuen Barcode erstellen</button>
+                <hr style="margin: 15px 0;">
+            `;
+
+            if (barcodes.length === 0) {
+                html += `<p style="text-align: center; color: #64748b;">Keine Barcodes gespeichert.</p>`;
+            } else {
+                barcodes.forEach((b) => {
+                    const uniqueId = b.id;
+                    html += `
+                        <div class="card ${b.pinned ? 'pinned' : ''}" onclick="showSingleBarcode('${b.value}')" style="padding-bottom: 40px; overflow: hidden;">
+                            <svg id="barcode-${uniqueId}" class="barcode-svg-preview"></svg>
+                            <div class="barcode-actions-bottom-right">
+                                <button class="btn ${b.pinned ? 'btn-yellow' : 'btn-secondary'}" style="width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="togglePinBarcode(${uniqueId}, event)" title="${b.pinned ? 'Loslösen' : 'Anpinnen'}">
+                                    📌
+                                </button>
+                                <button class="btn btn-secondary" style="width: auto; padding: 3px 6px; font-size: 12px; margin: 0;" onclick="showEditBarcodeScreen(${uniqueId}, event)" title="Barcode bearbeiten">
+                                    ✏️
+                                </button>
+                                <button class="btn btn-red" style="width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="showBarcodeDeleteConfirm(${uniqueId}, event)" title="Barcode löschen">
+                                    <span style="color: #ef4444;">🗑️</span>
+                                </button>
+                            </div>
+                            <div class="action-row" id="barcode-action-row-${uniqueId}"></div>
+                        </div>
+                    `;
+                });
+            }
+
+            listContainer.innerHTML = html;
+
+            barcodes.forEach((b) => {
+                try {
+                    JsBarcode(`#barcode-${b.id}`, b.value, { format: "CODE128", width: 2, height: 50, displayValue: true, flat: true });
+                } catch (e) {
+                    console.error("Fehler beim Rendern:", b.value, e);
+                }
+            });
+        }
+
+        // --- SCHICHTPLAN LOGIK ---
+        function renderShiftplan() {
+            const startDateStr = localStorage.getItem('shift_start_date');
+            if (!startDateStr) return "<p>Bitte erst das Startdatum in den Einstellungen festlegen.</p>";
+            
+            const parts = startDateStr.split('-');
+            const startDate = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+            
+            const now = new Date();
+            const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+            
+            let startYear = now.getFullYear();
+            let startMonth = now.getMonth() - 1;
+            
+            let html = `<h3>Schichtplan (Monatsansicht)</h3>
+                        <div class="shift-container" id="scroll-box">`;
+            
+            for (let m = 0; m < 24; m++) {
+                let targetDate = new Date(startYear, startMonth + m, 1);
+                let y = targetDate.getFullYear();
+                let monthIdx = targetDate.getMonth();
+                
+                let isCurrentMonth = (now.getFullYear() === y && now.getMonth() === monthIdx);
+                
+                html += `<div class="month-column" ${isCurrentMonth ? 'id="current-month-col"' : ''}>
+                            <div class="month-title">${monthNames[monthIdx]} ${y}</div>`;
+                
+                let daysInMonth = new Date(y, monthIdx + 1, 0).getDate();
+                for (let day = 1; day <= daysInMonth; day++) {
+                    let d = new Date(Date.UTC(y, monthIdx, day));
+                    
+                    const diffDays = Math.round((d - startDate) / (1000 * 60 * 60 * 24));
+                    let cyclePos = diffDays % 10;
+                    if (cyclePos < 0) cyclePos += 10;
+                    
+                    let type = cyclePos < 2 ? "F" : cyclePos < 4 ? "S" : cyclePos < 6 ? "N" : "X";
+                    let shortLabel = type === "F" ? "F" : type === "S" ? "S" : type === "N" ? "N" : "X";
+                    
+                    let isToday = (today.getTime() === d.getTime());
+                    let weekdayStr = weekdayNames[d.getUTCDay()];
+                    
+                    html += `<div class="day-row" style="${isToday ? 'border: 3px solid #DC2626; font-weight: 900;' : ''}">
+                                <span>${weekdayStr}, ${day}.</span>
+                                <span class="shift-badge ${type}">${shortLabel}</span>
+                             </div>`;
+                }
+                html += `</div>`;
+            }
+            
+            html += `</div><p><small>← Horizontal wischen, um weitere Monate zu sehen →</small></p>`;
+            return html;
+        }
+
+        // --- SCHICHTPLAN KLICK LOGIK ---
+        function handleShiftplanClick() {
+            const hasOpenedBefore = localStorage.getItem('shiftplan_opened_before');
+            
+            if (!hasOpenedBefore) {
+                localStorage.setItem('shiftplan_opened_before', 'true');
+                showFirstTimeShiftDateScreen();
+            } else {
+                showScreen('shiftplan');
+            }
+        }
+
+        function showFirstTimeShiftDateScreen() {
+            currentActiveScreen = 'first_shift_date';
+            const container = document.getElementById('app-view');
+            const savedDate = localStorage.getItem('shift_start_date') || '';
+            
+            let html = `
+                <h2>Starttermin einstellen (Schichtplan)</h2>
+                <div style="margin-top: 30px; text-align: center;">
+                    <p style="margin-bottom: 10px; font-size: 14px; color: #475569;">Tippe auf das Kalendersymbol, um das Startdatum auszuwählen:</p>
+                    
+                    <div class="calendar-trigger-btn" onclick="openCalendarPicker()">
+                        📅 <span id="selected-date-label">${savedDate ? savedDate : 'Datum auswählen'}</span>
+                    </div>
+                    
+                    <div style="display:none;">
+                        <input type="date" id="shift-date" value="${savedDate}" onchange="updateDateLabel(this)">
+                    </div>
+
+                    <button class="btn btn-blue btn-settings-half" style="margin-top: 15px;" onclick="saveFirstShiftDate()"><span style="color: #ef4444;">💾</span> Datum speichern</button>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function saveFirstShiftDate() {
+            const val = document.getElementById('shift-date').value;
+            if (val) {
+                localStorage.setItem('shift_start_date', val);
+                showScreen('shiftplan');
+            } else {
+                alert("Bitte wählen Sie ein Datum aus.");
+            }
+        }
+
+        function showShiftDateScreen() {
+            currentActiveScreen = 'settings_shift_date';
+            const container = document.getElementById('app-view');
+            const savedDate = localStorage.getItem('shift_start_date') || '';
+            
+            let html = `
+                <button class="btn btn-back" onclick="showScreen('settings')">← Zurück zu Einstellungen</button>
+                <h2>Starttermin einstellen (Schichtplan)</h2>
+                <div style="margin-top: 30px; text-align: center;">
+                    <p style="margin-bottom: 10px; font-size: 14px; color: #475569;">Tippe auf das Kalendersymbol, um das Datum auszuwählen:</p>
+                    
+                    <div class="calendar-trigger-btn" onclick="openCalendarPicker()">
+                        📅 <span id="selected-date-label">${savedDate ? savedDate : 'Datum auswählen'}</span>
+                    </div>
+                    
+                    <div style="display:none;">
+                        <input type="date" id="shift-date" value="${savedDate}" onchange="updateDateLabel(this)">
+                    </div>
+
+                    <button class="btn btn-blue btn-settings-half" style="margin-top: 15px;" onclick="saveShiftDateFromScreen()"><span style="color: #ef4444;">💾</span> Datum speichern</button>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function openCalendarPicker() {
+            const dateInput = document.getElementById('shift-date');
+            if (dateInput) {
+                if (typeof dateInput.showPicker === 'function') {
+                    dateInput.showPicker();
+                } else {
+                    dateInput.click();
+                }
+            }
+        }
+
+        function updateDateLabel(input) {
+            const label = document.getElementById('selected-date-label');
+            if (label && input.value) {
+                label.textContent = input.value;
+            }
+        }
+
+        function saveShiftDateFromScreen() {
+            const val = document.getElementById('shift-date').value;
+            if (val) {
+                localStorage.setItem('shift_start_date', val);
+                alert("Startdatum gespeichert!");
+                showScreen('shiftplan');
+            } else {
+                alert("Bitte wählen Sie ein Datum aus.");
+            }
+        }
+
+        // --- AUTOMATISCHER EXPORT INTERVALL ---
+        function showAutoExportScreen() {
+            currentActiveScreen = 'settings_auto_export';
+            const container = document.getElementById('app-view');
+            const currentInterval = localStorage.getItem('auto_export_interval') || 'off';
+            
+            const options = [
+                { id: 'off', label: 'Aus' },
+                { id: '5min', label: '5 Min' },
+                { id: '15min', label: '15 Min' },
+                { id: 'daily', label: 'Täglich' },
+                { id: 'weekly', label: 'Wöchentlich' },
+                { id: 'monthly', label: 'Monatlich' }
+            ];
+
+            let html = `
+                <button class="btn btn-back" onclick="showScreen('settings')">← Zurück zu Einstellungen</button>
+                <h2>Automatischer Export Intervall</h2>
+                <p style="text-align: center; font-size: 14px; color: #475569; margin-bottom: 20px;">
+                    Wähle das gewünschte Zeitintervall:
+                </p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 75%; margin: 0 auto;">
+                    ${options.map(opt => `
+                        <button 
+                            class="btn ${currentInterval === opt.id ? 'btn-blue' : ''}" 
+                            style="margin: 0;"
+                            onclick="selectInterval('${opt.id}')">
+                            ${opt.label}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function selectInterval(id) {
+            localStorage.setItem('auto_export_interval', id);
+            if (id !== 'off' && !localStorage.getItem('last_auto_export')) {
+                localStorage.setItem('last_auto_export', Date.now().toString());
+            }
+            showAutoExportScreen();
+        }
+
+        // --- IMPORT ---
+        function triggerImport() { document.getElementById('import-file').click(); }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData.notes) saveData('notes', importedData.notes);
+                    if (importedData.barcodes) saveData('barcodes', importedData.barcodes);
+                    if (importedData.passwords) saveData('passwords', importedData.passwords);
+                    if (importedData.shift_start_date) localStorage.setItem('shift_start_date', importedData.shift_start_date);
+                    alert("Daten importiert!");
+                    showScreen('settings');
+                } catch (err) { alert("Fehler beim Import."); }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- NAVIGATION ---
+        function showScreen(screen) {
+            currentActiveScreen = screen;
+            const container = document.getElementById('app-view');
+            document.getElementById('main-menu').style.display = 'none';
+            let html = `<button class="btn btn-back" onclick="backToMenu()">← Zurück zum Hauptmenü</button>`;
+            
+            if (screen === 'notes') {
+                html += `<h2>Notizen</h2><div id="notes-list-container"></div>`;
+                container.innerHTML = html;
+                renderNotes();
+            } else if (screen === 'barcodes') {
+                html += `<h2>Barcodes</h2><div id="list"></div>`;
+                container.innerHTML = html;
+                renderBarcodes();
+            } else if (screen === 'passwords') {
+                html += `<h2>Passwörter</h2><div id="passwords-list-container"></div>`;
+                container.innerHTML = html;
+                renderPasswords();
+            } else if (screen === 'shiftplan') {
+                html += renderShiftplan();
+                container.innerHTML = html;
+                
+                setTimeout(() => {
+                    const scrollBox = document.getElementById('scroll-box');
+                    const targetCol = document.getElementById('current-month-col');
+                    if (scrollBox && targetCol) {
+                        scrollBox.scrollLeft = targetCol.offsetLeft - scrollBox.offsetLeft - 6;
+                    }
+                }, 50);
+            } else if (screen === 'settings') {
+                html += `<h2>Einstellungen</h2>
+                         <div>
+                            <button class="btn btn-blue btn-settings-half" onclick="showShiftDateScreen()">Starttermin einstellen (Schichtplan)</button>
+                         </div>
+                         <div>
+                            <button class="btn btn-blue btn-settings-half" onclick="triggerExportAsFile(false)"><span style="color: #ef4444;">💾</span> Backup manuell herunterladen</button>
+                            <button class="btn btn-blue btn-settings-half" onclick="triggerImport()">Daten importieren</button>
+                         </div>
+                         <div>
+                            <button class="btn btn-blue btn-settings-half" onclick="showAutoExportScreen()">Automatischer Export Intervall</button>
+                         </div>
+                         <div style="margin-top: 25px;">
+                            <button class="btn btn-grey btn-settings-half" onclick="showAGBScreen()">AGB & Rechtliches</button>
+                         </div>`;
+                container.innerHTML = html;
+            } else if (screen === 'agb') {
+                html = `<button class="btn btn-back" onclick="showScreen('settings')">← Zurück zu Einstellungen</button>
+                         <h2>AGB & Rechtliches</h2>
+                         <div style="background: white; border: 2px solid #000000; border-radius: 12px; padding: 16px; margin-bottom: 20px; font-size: 14px; line-height: 1.5; color: #1e293b; white-space: pre-wrap; word-break: break-word;">Allgemeine Geschäftsbedingungen & End-User License Agreement (EULA)
+Stand: August 2026
+
+Diese Allgemeinen Geschäftsbedingungen (nachfolgend „AGB“) und die Endbenutzer-Lizenzvereinbarung (End-User License Agreement – „EULA“) regeln die Nutzung der App CellWorks-lite (nachfolgend „App“), bereitgestellt durch:
+
+Dominik Piskol
+
+E-Mail: user2702@gmx.de
+
+Entwickler
+
+Durch das Herunterladen, Installieren oder Nutzen der App erklärst du dich mit diesen Bedingungen einverstanden. Wenn du diesen Bedingungen nicht zustimmst, darfst du die App nicht installieren oder nutzen.
+
+TEIL 1: End-User License Agreement (EULA) – Lizenzbedingungen
+1. Einräumung der Lizenz
+Der Entwickler räumt dir hiermit eine persönliche, weltweite, nicht ausschließliche, nicht übertragbare, widerrufliche Lizenz ein, die App auf deinen kompatiblen privaten Endgeräten (Smartphone/Tablet) für nicht-kommerzielle Zwecke zu installieren und zu nutzen.
+
+2. Lizenzbeschränkungen
+Es ist dir untersagt:
+
+Die App zu dekompilieren, zu disassemblieren, zu reverse-engineern oder zu versuchen, den Quellcode der App abzuleiten (sofern dies nicht durch zwingendes Recht ausdrücklich gestattet ist).
+
+Die App zu vermieten, zu verleasen, zu unterlizenzieren oder kommerziell zu vertreiben.
+
+Änderungen, Übersetzungen oder abgeleitete Werke der App zu erstellen.
+
+Urheberrechts- oder Eigentumshinweise aus der App zu entfernen oder zu verändern.
+
+3. Eigentum
+Die App (einschließlich aller Grafiken, des Designs, der Benutzeroberfläche und des zugrundeliegenden Codes) ist geistiges Eigentum des Entwicklers und durch Urhebergesetze geschützt. Dir wird lediglich das Nutzungsrecht gemäß dieser EULA eingeräumt, jedoch kein Eigentum an der App.
+
+TEIL 2: Allgemeine Geschäftsbedingungen (Nutzungsbedingungen)
+1. Funktionsweise & Datenverarbeitung
+Die App dient der Verwaltung von Notizen und Listen.
+
+Die App speichert alle Daten ausschließlich lokal auf deinem Endgerät. Es findet keine Datenübertragung an Server des Entwicklers statt.
+
+Du bist selbst für die Sicherung deiner Daten (z. B. über die Export-/Backup-Funktion) verantwortlich. Der Entwickler haftet nicht für Datenverluste, die durch Geräteschäden, Software-Resets oder Deinstallation der App entstehen.
+
+2. Kosten & Verfügbarkeit
+Die Nutzung der App erfolgt – sofern nicht anders angegeben – kostenlos.
+
+Der Entwickler übernimmt keine Garantie für die ständige Verfügbarkeit, Fehlerfreiheit oder permanente Weiterentwicklung der App. Die Bereitstellung kann jederzeit ohne Vorankündigung geändert oder eingestellt werden.
+
+3. Gewährleistungsausschluss (Disclaimer)
+Die App wird im „Ist-Zustand“ („as is“) und „wie verfügbar“ bereitgestellt, ohne ausdrückliche oder stillschweigende Gewährleistungen jeglicher Art.
+
+Der Entwickler übernimmt keine Garantie dafür, dass die App deinen Anforderungen entspricht, ununterbrochen oder fehlerfrei läuft oder dass eventuelle Programmfehler korrigiert werden.
+
+Insbesondere wird keine Gewähr für die Richtigkeit von berechneten Statistiken, Rundenzeiten oder sonstigen in der App erfassten Daten übernommen.
+
+4. Haftungsbeschränkung
+Die Haftung des Entwicklers für leichte Fahrilässigkeit ist – soweit gesetzlich zulässig – ausgeschlossen.
+
+Der Entwickler haftet nicht für direkte oder indirekte Schäden, Datenverluste, entgangenen Gewinn oder Sachschäden, die aus der Nutzung oder der Unmöglichkeit der Nutzung der App entstehen (es sei denn, es liegt Vorsatz oder grobe Fahrlässigkeit des Entwicklers vor bzw. es betrifft zwingende gesetzliche Haftungsvorschriften wie das Produkthaftungsgesetz).
+
+5. Anwendbares Recht
+Es gilt das Recht des Landes, in dem der Entwickler seinen Wohnsitz hat (Standard: deutsches Recht, sofern kein Verbraucherschutzrecht deines Wohnsitzlandes zwingend entgegensteht).
+
+6. Änderungen der Bedingungen
+Der Entwickler behält sich das Recht vor, diese AGB/EULA jederzeit zu aktualisieren. Die jeweils aktuelle Version wird in der App oder im entsprechenden Store veröffentlicht. Durch die fortgesetzte Nutzung der App nach Änderungen akzeptierst du die neuen Bedingungen.
+
+-------------------------------------
+
+Datenschutzerklärung für CellWorks-lite
+Stand: August 2026
+
+Der Schutz deiner persönlichen Daten ist uns ein wichtiges Anliegen. Nachfolgend informieren wir dich darüber, wie Daten im Rahmen der Nutzung der CellWorks-lite (nachfolgend „App“) verarbeitet werden.
+
+1. Verantwortlicher
+Verantwortlich für die Datenverarbeitung innerhalb der App ist:
+Dominik Piskol
+
+E-Mail: user2702@gmx.de
+
+2. Keine Erhebung personenbezogener Daten durch den Entwickler
+Der App CellWorks-lite wurde so konzipiert, dass keinerlei personenbezogene Daten an den Entwickler oder an Dritte übermittelt werden. Wir betreiben keine eigenen Server und erfassen kein Nutzerverhalten.
+
+3. Lokale Datenspeicherung (SharedPreferences)
+Alle von dir in der App eingegebenen Daten (Barcode's, persönliche Notizen, etc) werden ausschließlich lokal auf deinem Endgerät (mittels SharedPreferences) gespeichert.
+
+Diese Daten verlassen dein Gerät zu keinem Zeitpunkt.
+
+Wir haben keinen Zugriff auf diese Daten.
+
+4. Export- und Import-Funktion (Backup)
+Die App bietet dir die Möglichkeit, deine Daten als JSON-Datei zu exportieren (Backup) oder zu importieren.
+
+Diese Funktion greift auf das lokale Dateisystem deines Geräts zu.
+
+Das Teilen von Backup-Dateien (z. B. über Messenger-Dienste oder E-Mail) erfolgt ausschließlich auf deine eigene Initiative hin über die auf deinem Gerät installierten Freigabe-Optionen. Hierbei gelten die Datenschutzbestimmungen der jeweiligen genutzten App bzw. des Betriebssystems.
+
+5. Berechtigungen der App
+Die App benötigt je nach genutzter Funktion ggf. Zugriff auf:
+
+Speicher/Dateisystem: Ausschließlich zum Speichern und Laden von manuell exportierten Backup-Dateien.
+
+6. Deine Rechte
+Da sämtliche Daten lokal auf deinem Gerät gespeichert werden und uns keine Daten vorliegen, kannst du deine Daten jederzeit eigenständig verwalten oder löschen, indem du:
+
+Einträge direkt in der App löschst oder bearbeitest.
+
+Die App-Daten in den Einstellungen deines Betriebssystems (App-Info -> Speicher löschen) vollständig zurücksetzt.
+
+-------------------------------------
+
+Impressum:
+Dominik Piskol
+Über dem Westerhofe 43a
+31185 Söhlde
+user2702@gmx.de</div>`;
+                container.innerHTML = html;
+            } else {
+                html += `## ${screen.toUpperCase()}\n<p>In Arbeit...</p>`;
+                container.innerHTML = html;
+            }
+        }
+
+        function showAGBScreen() {
+            showScreen('agb');
+        }
+
+        function backToMenu() {
+            currentActiveScreen = 'menu';
+            document.getElementById('app-view').innerHTML = '';
+            document.getElementById('main-menu').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
