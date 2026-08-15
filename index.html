@@ -118,7 +118,7 @@
         .X { background-color: #94a3b8; } 
     </style>
 </head>
-<body onload="checkAutoExport(); initSwipeBack(); registerServiceWorker();">
+<body onload="checkAutoExport(); initSwipeBack(); registerServiceWorker(); requestPersistentStorage();">
 
     <div id="main-menu">
         <div class="header-banner">
@@ -164,6 +164,27 @@
                     .catch(err => console.error('Service Worker Fehler:', err));
             }
         }
+
+        // --- PERSISTENTEN SPEICHER ANFORDERN ---
+        function requestPersistentStorage() {
+            if (navigator.storage && navigator.storage.persist) {
+                navigator.storage.persist().then(granted => {
+                    if (granted) {
+                        console.log("Super! Safari hat zugestimmt, die Daten NICHT automatisch zu löschen.");
+                    } else {
+                        console.log("Safari wird die Daten nach 7 Tagen Inaktivität löschen.");
+                    }
+                });
+            }
+        }
+
+        // --- AUTOMATISCHER EXPORT BEIM SCHLIESSEN/VERLASSEN DER APP ---
+        window.addEventListener('pagehide', function () {
+            const interval = localStorage.getItem('auto_export_interval') || 'onclose';
+            if (interval === 'onclose') {
+                triggerExportAsFile(true);
+            }
+        });
 
         const monthNames = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
         const weekdayNames = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
@@ -239,8 +260,8 @@
         }
 
         function checkAutoExport() {
-            const interval = localStorage.getItem('auto_export_interval') || 'off';
-            if (interval === 'off') return;
+            const interval = localStorage.getItem('auto_export_interval') || 'onclose';
+            if (interval === 'off' || interval === 'onclose') return;
 
             const lastExport = parseInt(localStorage.getItem('last_auto_export') || '0', 10);
             const now = Date.now();
@@ -1082,10 +1103,11 @@
         function showAutoExportScreen() {
             currentActiveScreen = 'settings_auto_export';
             const container = document.getElementById('app-view');
-            const currentInterval = localStorage.getItem('auto_export_interval') || 'off';
+            const currentInterval = localStorage.getItem('auto_export_interval') || 'onclose';
             
             const options = [
                 { id: 'off', label: 'Aus' },
+                { id: 'onclose', label: 'bei schließen der App' },
                 { id: '5min', label: '5 Min' },
                 { id: '15min', label: '15 Min' },
                 { id: 'daily', label: 'Täglich' },
@@ -1116,7 +1138,7 @@
 
         function selectInterval(id) {
             localStorage.setItem('auto_export_interval', id);
-            if (id !== 'off' && !localStorage.getItem('last_auto_export')) {
+            if (id !== 'off' && id !== 'onclose' && !localStorage.getItem('last_auto_export')) {
                 localStorage.setItem('last_auto_export', Date.now().toString());
             }
             showAutoExportScreen();
@@ -1244,7 +1266,7 @@ Der Entwickler übernimmt keine Garantie dafür, dass die App deinen Anforderung
 Insbesondere wird keine Gewähr für die Richtigkeit von berechneten Statistiken, Rundenzeiten oder sonstigen in der App erfassten Daten übernommen.
 
 4. Haftungsbeschränkung
-Die Haftung des Entwicklers für leichte Fahrilässigkeit ist – soweit gesetzlich zulässig – ausgeschlossen.
+Die Haftung des Entwicklers für leichte Fahrlässigkeit ist – soweit gesetzlich zulässig – ausgeschlossen.
 
 Der Entwickler haftet nicht für direkte oder indirekte Schäden, Datenverluste, entgangenen Gewinn oder Sachschäden, die aus der Nutzung oder der Unmöglichkeit der Nutzung der App entstehen (es sei denn, es liegt Vorsatz oder grobe Fahrlässigkeit des Entwicklers vor bzw. es betrifft zwingende gesetzliche Haftungsvorschriften wie das Produkthaftungsgesetz).
 
