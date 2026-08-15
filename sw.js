@@ -1,8 +1,8 @@
 const CACHE_NAME = 'cellworks-v1';
 const ASSETS_TO_CACHE = [
-  'https://dm-technik.de/Apps/CellWorks-lite/',
-  'https://dm-technik.de/Apps/CellWorks-lite/index.html',
-  'https://dm-technik.de/Apps/CellWorks-lite/manifest.json',
+  'https://dom2702.github.io/CellWorks-lite/',
+  'https://dom2702.github.io/CellWorks-lite/index.html',
+  'https://dom2702.github.io/CellWorks-lite/manifest.json',
   'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js'
 ];
 
