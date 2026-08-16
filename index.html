@@ -57,6 +57,10 @@
         .btn-red { background-color: #DC2626; color: white; padding: 6px 10px; font-size: 12px; width: auto; border: 2px solid #000000; }
         .btn-secondary { background-color: #64748b; color: white; padding: 6px 10px; font-size: 12px; width: auto; border: 2px solid #000000; }
         .btn-yellow { background-color: #eab308; color: white; padding: 6px 10px; font-size: 12px; width: auto; border: 2px solid #000000; }
+        
+        /* Gelber Button mit rotem Text ganz unten auf der Hauptseite */
+        .btn-yellow-red-text { background-color: #eab308; color: #DC2626; font-weight: 900; }
+
         .btn-back { background-color: #e2e8f0; color: #475569; margin-bottom: 15px; border: 2px solid #000000; padding: 8px 12px; font-size: 14px; width: auto; display: block; }
         
         .action-row { display: flex; gap: 8px; margin-top: 8px; width: 100%; justify-content: center; align-items: center; }
@@ -71,6 +75,7 @@
         /* Roter Header-Bereich auf der Hauptseite */
         .header-banner { background-color: #DC2626; border: 2px solid #000000; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
         h1 { font-size: 22px; color: #ffffff; margin: 0 0 5px 0; }
+        .version-tag { font-size: 14px; font-weight: normal; margin-left: 6px; opacity: 0.85; }
         .author-sub { font-size: 12px; color: #ffffff; font-style: italic; margin: 0; }
 
         .icon-large { font-size: 80px; color: #cbd5e1; display: block; text-align: center; margin: 20px 0; }
@@ -102,7 +107,7 @@
         .delete-confirm-box p { margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #991b1b; }
 
         /* Kalender & Layout */
-        .calendar-trigger-btn { background-color: white; border: 2px solid #000000; border-radius: 6px; width: 50%; margin: 0 auto 10px auto; padding: 10px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 1px 0px #000000; }
+        .date-picker-input { background-color: white; border: 2px solid #000000; border-radius: 6px; width: 50%; margin: 0 auto 10px auto; padding: 10px; font-size: 16px; font-weight: bold; cursor: pointer; display: block; text-align: center; box-shadow: 0 1px 0px #000000; box-sizing: border-box; font-family: inherit; -webkit-appearance: none; }
         .fullscreen-card { background: white; border: 2px solid #000000; border-radius: 16px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; margin-top: 20px; overflow-x: auto; }
         hr { border: none; border-top: 2px solid #000000; margin: 20px 0; }
 
@@ -118,11 +123,11 @@
         .X { background-color: #94a3b8; } 
     </style>
 </head>
-<body onload="checkAutoExport(); initSwipeBack(); registerServiceWorker(); requestPersistentStorage();">
+<body onload="initSwipeBack(); registerServiceWorker(); requestPersistentStorage();">
 
     <div id="main-menu">
         <div class="header-banner">
-            <h1>CellWorks-lite</h1>
+            <h1>CellWorks-lite<span class="version-tag">V2.02</span></h1>
             <p class="author-sub">by D. Piskol 2026</p>
         </div>
         
@@ -150,6 +155,8 @@
         <hr style="width: 75%; margin: 15px auto;">
         
         <button class="btn btn-blue btn-half" onclick="handleShiftplanClick()">Schichtplan</button>
+        
+        <button class="btn btn-yellow-red-text btn-half" onclick="triggerExportAsFile()">Alle Daten sichern</button>
     </div>
 
     <input type="file" id="import-file" style="display: none;" onchange="importData(event)" accept=".json">
@@ -177,14 +184,6 @@
                 });
             }
         }
-
-        // --- AUTOMATISCHER EXPORT BEIM SCHLIESSEN/VERLASSEN DER APP ---
-        window.addEventListener('pagehide', function () {
-            const interval = localStorage.getItem('auto_export_interval') || 'onclose';
-            if (interval === 'onclose') {
-                triggerExportAsFile(true);
-            }
-        });
 
         const monthNames = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
         const weekdayNames = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
@@ -223,7 +222,7 @@
                 showScreen('passwords');
             } else if (currentActiveScreen === 'barcodes_add' || currentActiveScreen === 'barcodes_edit' || currentActiveScreen === 'barcodes_detail') {
                 showScreen('barcodes');
-            } else if (currentActiveScreen === 'settings_shift_date' || currentActiveScreen === 'settings_auto_export' || currentActiveScreen === 'first_shift_date' || currentActiveScreen === 'agb') {
+            } else if (currentActiveScreen === 'settings_shift_date' || currentActiveScreen === 'first_shift_date' || currentActiveScreen === 'agb') {
                 showScreen('settings');
             } else if (currentActiveScreen === 'shiftplan') {
                 return;
@@ -241,41 +240,15 @@
         function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
         function loadData(key) { return JSON.parse(localStorage.getItem(key)) || []; }
 
-        // --- AUTOMATISCHER EXPORT LOGIK ---
-        function triggerExportAsFile(isAutomatic = false) {
+        // --- EXPORT LOGIK ---
+        function triggerExportAsFile() {
             const fullData = { notes: loadData('notes'), barcodes: loadData('barcodes'), passwords: loadData('passwords'), shift_start_date: localStorage.getItem('shift_start_date') };
             const blob = new Blob([JSON.stringify(fullData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            
-            const dateStr = new Date().toISOString().slice(0, 10);
-            a.download = isAutomatic ? `CellWorks_AutoBackup_${dateStr}.json` : 'CellWorks_Backup.json';
-            
+            a.download = 'CellWorks_Backup.json';
             a.click();
-            
-            if (isAutomatic) {
-                localStorage.setItem('last_auto_export', Date.now().toString());
-            }
-        }
-
-        function checkAutoExport() {
-            const interval = localStorage.getItem('auto_export_interval') || 'onclose';
-            if (interval === 'off' || interval === 'onclose') return;
-
-            const lastExport = parseInt(localStorage.getItem('last_auto_export') || '0', 10);
-            const now = Date.now();
-            let intervalMs = 0;
-
-            if (interval === '5min') intervalMs = 5 * 60 * 1000;
-            if (interval === '15min') intervalMs = 15 * 60 * 1000;
-            if (interval === 'daily') intervalMs = 24 * 60 * 60 * 1000;
-            if (interval === 'weekly') intervalMs = 7 * 24 * 60 * 60 * 1000;
-            if (interval === 'monthly') intervalMs = 30 * 24 * 60 * 60 * 1000;
-
-            if (now - lastExport > intervalMs) {
-                triggerExportAsFile(true);
-            }
         }
 
         // --- NOTIZEN LOGIK ---
@@ -1019,15 +992,9 @@
             let html = `
                 <h2>Starttermin einstellen (Schichtplan)</h2>
                 <div style="margin-top: 30px; text-align: center;">
-                    <p style="margin-bottom: 10px; font-size: 14px; color: #475569;">Tippe auf das Kalendersymbol, um das Startdatum auszuwählen:</p>
+                    <p style="margin-bottom: 10px; font-size: 14px; color: #475569;">Tippe auf das Datumsfeld, um das Startdatum auszuwählen:</p>
                     
-                    <div class="calendar-trigger-btn" onclick="openCalendarPicker()">
-                        📅 <span id="selected-date-label">${savedDate ? savedDate : 'Datum auswählen'}</span>
-                    </div>
-                    
-                    <div style="display:none;">
-                        <input type="date" id="shift-date" value="${savedDate}" onchange="updateDateLabel(this)">
-                    </div>
+                    <input type="date" id="shift-date" class="date-picker-input" value="${savedDate}">
 
                     <button class="btn btn-blue btn-settings-half" style="margin-top: 15px;" onclick="saveFirstShiftDate()"><span style="color: #ef4444;">💾</span> Datum speichern</button>
                 </div>
@@ -1054,38 +1021,14 @@
                 <button class="btn btn-back" onclick="showScreen('settings')">← Zurück zu Einstellungen</button>
                 <h2>Starttermin einstellen (Schichtplan)</h2>
                 <div style="margin-top: 30px; text-align: center;">
-                    <p style="margin-bottom: 10px; font-size: 14px; color: #475569;">Tippe auf das Kalendersymbol, um das Datum auszuwählen:</p>
+                    <p style="margin-bottom: 10px; font-size: 14px; color: #475569;">Tippe auf das Datumsfeld, um das Datum auszuwählen:</p>
                     
-                    <div class="calendar-trigger-btn" onclick="openCalendarPicker()">
-                        📅 <span id="selected-date-label">${savedDate ? savedDate : 'Datum auswählen'}</span>
-                    </div>
-                    
-                    <div style="display:none;">
-                        <input type="date" id="shift-date" value="${savedDate}" onchange="updateDateLabel(this)">
-                    </div>
+                    <input type="date" id="shift-date" class="date-picker-input" value="${savedDate}">
 
                     <button class="btn btn-blue btn-settings-half" style="margin-top: 15px;" onclick="saveShiftDateFromScreen()"><span style="color: #ef4444;">💾</span> Datum speichern</button>
                 </div>
             `;
             container.innerHTML = html;
-        }
-
-        function openCalendarPicker() {
-            const dateInput = document.getElementById('shift-date');
-            if (dateInput) {
-                if (typeof dateInput.showPicker === 'function') {
-                    dateInput.showPicker();
-                } else {
-                    dateInput.click();
-                }
-            }
-        }
-
-        function updateDateLabel(input) {
-            const label = document.getElementById('selected-date-label');
-            if (label && input.value) {
-                label.textContent = input.value;
-            }
         }
 
         function saveShiftDateFromScreen() {
@@ -1097,51 +1040,6 @@
             } else {
                 alert("Bitte wählen Sie ein Datum aus.");
             }
-        }
-
-        // --- AUTOMATISCHER EXPORT INTERVALL ---
-        function showAutoExportScreen() {
-            currentActiveScreen = 'settings_auto_export';
-            const container = document.getElementById('app-view');
-            const currentInterval = localStorage.getItem('auto_export_interval') || 'onclose';
-            
-            const options = [
-                { id: 'off', label: 'Aus' },
-                { id: 'onclose', label: 'bei schließen der App' },
-                { id: '5min', label: '5 Min' },
-                { id: '15min', label: '15 Min' },
-                { id: 'daily', label: 'Täglich' },
-                { id: 'weekly', label: 'Wöchentlich' },
-                { id: 'monthly', label: 'Monatlich' }
-            ];
-
-            let html = `
-                <button class="btn btn-back" onclick="showScreen('settings')">← Zurück zu Einstellungen</button>
-                <h2>Automatischer Export Intervall</h2>
-                <p style="text-align: center; font-size: 14px; color: #475569; margin-bottom: 20px;">
-                    Wähle das gewünschte Zeitintervall:
-                </p>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 75%; margin: 0 auto;">
-                    ${options.map(opt => `
-                        <button 
-                            class="btn ${currentInterval === opt.id ? 'btn-blue' : ''}" 
-                            style="margin: 0;"
-                            onclick="selectInterval('${opt.id}')">
-                            ${opt.label}
-                        </button>
-                    `).join('')}
-                </div>
-            `;
-            container.innerHTML = html;
-        }
-
-        function selectInterval(id) {
-            localStorage.setItem('auto_export_interval', id);
-            if (id !== 'off' && id !== 'onclose' && !localStorage.getItem('last_auto_export')) {
-                localStorage.setItem('last_auto_export', Date.now().toString());
-            }
-            showAutoExportScreen();
         }
 
         // --- IMPORT ---
@@ -1201,11 +1099,7 @@
                             <button class="btn btn-blue btn-settings-half" onclick="showShiftDateScreen()">Starttermin einstellen (Schichtplan)</button>
                          </div>
                          <div>
-                            <button class="btn btn-blue btn-settings-half" onclick="triggerExportAsFile(false)"><span style="color: #ef4444;">💾</span> Backup manuell herunterladen</button>
                             <button class="btn btn-blue btn-settings-half" onclick="triggerImport()">Daten importieren</button>
-                         </div>
-                         <div>
-                            <button class="btn btn-blue btn-settings-half" onclick="showAutoExportScreen()">Automatischer Export Intervall</button>
                          </div>
                          <div style="margin-top: 25px;">
                             <button class="btn btn-grey btn-settings-half" onclick="showAGBScreen()">AGB & Rechtliches</button>
