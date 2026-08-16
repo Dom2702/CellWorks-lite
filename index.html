@@ -91,10 +91,10 @@
         .note-card-fullscreen { background: white; border: 2px solid #000000; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); width: 90%; margin: 0 auto; box-sizing: border-box; position: relative; display: flex; flex-direction: column; min-height: calc(100vh - 140px); }
         .note-full-body-fullscreen { font-size: 15px; color: #1e293b; white-space: pre-wrap; word-break: break-word; margin: 15px 0; line-height: 1.5; flex-grow: 1; }
 
-        .note-preview-body { font-size: 14px; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px; padding-right: 50px; }
+        .note-preview-body { font-size: 14px; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px; padding-right: 0; }
         .note-full-body { font-size: 15px; color: #1e293b; white-space: pre-wrap; word-break: break-word; margin: 15px 0; line-height: 1.5; }
         
-        .note-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; padding-right: 50px; }
+        .note-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; padding-right: 120px; }
         .note-title { font-weight: bold; font-size: 16px; color: #0f172a; }
         .note-date { font-size: 11px; color: #64748b; margin-bottom: 4px; }
         
@@ -127,7 +127,7 @@
 
     <div id="main-menu">
         <div class="header-banner">
-            <h1>CellWorks-lite<span class="version-tag">V2.07</span></h1>
+            <h1>CellWorks-lite<span class="version-tag">V2.08</span></h1>
             <p class="author-sub">by D. Piskol 2026</p>
         </div>
         
@@ -461,14 +461,14 @@
             } else {
                 filtered.forEach(n => {
                     html += `
-                        <div class="note-card ${n.pinned ? 'pinned' : ''}" onclick="showSingleNote(${n.id})">
-                            <button class="btn ${n.pinned ? 'btn-yellow' : 'btn-secondary'}" style="position: absolute; top: 10px; right: 10px; width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="togglePinNote(${n.id}, event)" title="${n.pinned ? 'Loslösen' : 'Anpinnen'}">
+                        <div class="note-card ${n.pinned ? 'pinned' : ''}" onclick="showSingleNote(${n.id})" style="padding-top: 45px;">
+                            <button class="btn ${n.pinned ? 'btn-yellow' : 'btn-secondary'}" style="position: absolute; top: 10px; right: 80px; width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="togglePinNote(${n.id}, event)" title="${n.pinned ? 'Loslösen' : 'Anpinnen'}">
                                 📌
                             </button>
-                            <button class="btn btn-secondary" style="position: absolute; top: 40px; right: 10px; width: auto; padding: 3px 6px; font-size: 12px; margin: 0;" onclick="showEditNoteScreen(${n.id}, event)" title="Notiz bearbeiten">
+                            <button class="btn btn-secondary" style="position: absolute; top: 10px; right: 45px; width: auto; padding: 3px 6px; font-size: 12px; margin: 0;" onclick="showEditNoteScreen(${n.id}, event)" title="Notiz bearbeiten">
                                 ✏️
                             </button>
-                            <button class="btn btn-red" style="position: absolute; top: 70px; right: 10px; width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="showListDeleteConfirm(${n.id}, event)" title="Notiz löschen">
+                            <button class="btn btn-red" style="position: absolute; top: 10px; right: 10px; width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="showListDeleteConfirm(${n.id}, event)" title="Notiz löschen">
                                 <span style="color: #ef4444;">🗑️</span>
                             </button>
 
@@ -730,7 +730,7 @@
                             <div class="note-header">
                                 <span class="note-title">${p.title}</span>
                             </div>
-                            <div class="note-preview-body">
+                            <div class="note-preview-body" style="padding-right: 50px;">
                                 <strong>Benutzer:</strong> ${p.username || '-'}<br>
                                 <strong>Passwort:</strong> ${displayPassText}
                             </div>
@@ -1196,7 +1196,7 @@ Wir haben keinen Zugriff auf diese Daten.
 4. Export- und Import-Funktion (Backup)
 Die App bietet dir die Möglichkeit, deine Daten als JSON-Datei zu exportieren (Backup) oder zu importieren.
 
-Diese Funktion greift auf das lokale Dateisystem deines Geräts zu.
+Diese Funktion greift auf das lokale Dateisystem dures Geräts zu.
 
 Das Teilen von Backup-Dateien (z. B. über Messenger-Dienste oder E-Mail) erfolgt ausschließlich auf deine eigene Initiative hin über die auf deinem Gerät installierten Freigabe-Optionen. Hierbei gelten die Datenschutzbestimmungen der jeweiligen genutzten App bzw. des Betriebssystems.
 
@@ -1208,7 +1208,7 @@ Speicher/Dateisystem: Ausschließlich zum Speichern und Laden von manuell export
 6. Deine Rechte
 Da sämtliche Daten lokal auf deinem Gerät gespeichert werden und uns keine Daten vorliegen, kannst du deine Daten jederzeit eigenständig verwalten oder löschen, indem du:
 
-Einträge direkt in der App löschst oder bearbeitest.
+Einträge direkt in der App löschst oder bearbeitst.
 
 Die App-Daten in den Einstellungen deines Betriebssystems (App-Info -> Speicher löschen) vollständig zurücksetzt.
 
