@@ -127,7 +127,7 @@
 
     <div id="main-menu">
         <div class="header-banner">
-            <h1>CellWorks-lite<span class="version-tag">V2.05</span></h1>
+            <h1>CellWorks-lite<span class="version-tag">V2.06</span></h1>
             <p class="author-sub">by D. Piskol 2026</p>
         </div>
         
@@ -990,7 +990,7 @@
             const savedDate = localStorage.getItem('shift_start_date') || '';
             
             let html = `
-                <h2>Starttermin einstellen (Schichtplan)</h2>
+                <h2>Startdatum für den Schichtplan</h2>
                 <div style="margin-top: 30px; text-align: center;">
                     <p style="margin-bottom: 10px; font-size: 14px; color: #475569;">Tippe auf das Datumsfeld, um das Startdatum auszuwählen:</p>
                     
@@ -1019,7 +1019,7 @@
             
             let html = `
                 <button class="btn btn-back" onclick="showScreen('settings')">← Zurück zu Einstellungen</button>
-                <h2>Starttermin einstellen (Schichtplan)</h2>
+                <h2>Startdatum für den Schichtplan</h2>
                 <div style="margin-top: 30px; text-align: center;">
                     <p style="margin-bottom: 10px; font-size: 14px; color: #475569;">Tippe auf das Datumsfeld, um das Datum auszuwählen:</p>
                     
@@ -1096,7 +1096,7 @@
             } else if (screen === 'settings') {
                 html += `<h2>Einstellungen</h2>
                          <div>
-                            <button class="btn btn-blue btn-settings-half" onclick="showShiftDateScreen()">Starttermin einstellen (Schichtplan)</button>
+                            <button class="btn btn-blue btn-settings-half" onclick="showShiftDateScreen()">Startdatum für den Schichtplan</button>
                          </div>
                          <div>
                             <button class="btn btn-blue btn-settings-half" onclick="triggerImport()">Daten importieren</button>
