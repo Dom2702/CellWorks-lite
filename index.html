@@ -15,64 +15,45 @@
     <!-- JsBarcode Bibliothek -->
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 20px; background-color: #F8FAFC; color: #1e293b; }
-        .card { background: white; border: 2px solid #000000; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; box-sizing: border-box; width: 90%; margin-left: auto; margin-right: auto; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 10px; background-color: #F8FAFC; color: #1e293b; }
+        
+        .card { background: white; border: 2px solid #000000; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; box-sizing: border-box; width: 99%; margin-left: auto; margin-right: auto; }
         .card:active { background-color: #f1f5f9; }
         .card.pinned { background-color: #fef9c3; border-color: #ca8a04; }
         
         .btn { display: block; width: 100%; padding: 10px 12px; margin-bottom: 14px; border: 2px solid #000000; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; text-align: center; box-shadow: 0 1px 0px #000000; }
         
-        /* Barcode & Eingabefelder */
-        #barcode-input { width: 90%; margin: 0 auto 15px auto; display: block; padding: 16px; border: 2px solid #000000; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+        #barcode-input { width: 99%; margin: 0 auto 15px auto; display: block; padding: 16px; border: 2px solid #000000; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
         
-        .note-input-container { width: 90%; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+        .note-input-container { width: 99%; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
         .note-input, .note-textarea { width: 100%; padding: 14px; border: 2px solid #000000; border-radius: 8px; font-size: 16px; box-sizing: border-box; font-family: inherit; background: white; }
         
-        /* Bildschirmfüllende Textarea für das Erstellen/Bearbeiten von Notizen */
         .note-textarea-fullscreen { resize: none; flex-grow: 1; min-height: 250px; }
-        .fullscreen-form-wrapper { display: flex; flex-direction: column; width: 90%; margin: 0 auto; height: calc(100vh - 160px); box-sizing: border-box; gap: 12px; position: relative; }
+        .fullscreen-form-wrapper { display: flex; flex-direction: column; width: 99%; margin: 0 auto; height: calc(100vh - 160px); box-sizing: border-box; gap: 12px; position: relative; }
 
-        /* Buttons auf der Hauptseite auf 75% Breite und zentriert */
         .btn-half { width: 75%; margin-left: auto; margin-right: auto; }
-
-        /* Buttons auf der Einstellungsseite auf 50% Breite reduziert und zentriert */
         .btn-settings-half { width: 50%; margin-left: auto; margin-right: auto; }
-
-        /* Speziell für den Installations-Button ganz oben (75% Breite & zentriert) */
         .btn-small-half { width: 75%; margin: 10px auto; padding: 6px 10px; font-size: 11px; background-color: #f1f5f9; color: #475569; border: 2px solid #000000; border-radius: 6px; font-weight: bold; cursor: pointer; display: block; text-align: center; box-shadow: 0 1px 0px #000000; }
 
         .btn-red-text { color: #DC2626; font-weight: 900; }
-
-        /* Speziell für den "Speichern" Button (50% Breite & zentriert) ohne rote Diskette */
         .btn-save-centered { width: 50%; margin: 15px auto 8px auto; background-color: #2563EB; color: white; padding: 12px; border: 2px solid #000000; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; display: block; text-align: center; box-shadow: 0 1px 0px #000000; }
-
-        /* Speichern-Button oben rechts in der Zeile der Überschrift */
         .btn-save-top-right { position: absolute; top: -5px; right: 0; background-color: #2563EB; color: white; padding: 6px 12px; border: 2px solid #000000; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; box-shadow: 0 1px 0px #000000; z-index: 10; }
-
-        /* Button zum Öffnen der Erstellungsseiten */
-        .btn-new-note { width: 90%; margin: 0 auto 15px auto; background-color: #2563EB; color: white; padding: 12px; border: 2px solid #000000; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; display: block; text-align: center; box-shadow: 0 1px 0px #000000; }
+        .btn-new-note { width: 99%; margin: 0 auto 15px auto; background-color: #2563EB; color: white; padding: 12px; border: 2px solid #000000; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; display: block; text-align: center; box-shadow: 0 1px 0px #000000; }
 
         .btn-blue { background-color: #2563EB; color: white; }
         .btn-grey { background-color: #4D4C4C; color: white; }
         .btn-red { background-color: #DC2626; color: white; padding: 6px 10px; font-size: 12px; width: auto; border: 2px solid #000000; }
         .btn-secondary { background-color: #64748b; color: white; padding: 6px 10px; font-size: 12px; width: auto; border: 2px solid #000000; }
         .btn-yellow { background-color: #eab308; color: white; padding: 6px 10px; font-size: 12px; width: auto; border: 2px solid #000000; }
-        
-        /* Gelber Button mit rotem Text ganz unten auf der Hauptseite */
         .btn-yellow-red-text { background-color: #eab308; color: #DC2626; font-weight: 900; }
-
         .btn-back { background-color: #e2e8f0; color: #475569; margin-bottom: 15px; border: 2px solid #000000; padding: 8px 12px; font-size: 14px; width: auto; display: block; }
         
-        .action-row { display: flex; gap: 8px; margin-top: 8px; width: 100%; justify-content: center; align-items: center; }
-
-        /* Horizontale Aktionsleiste unten rechts für die Barcode-Vorschau */
-        .barcode-actions-bottom-right { position: absolute; bottom: 8px; right: 8px; display: flex; flex-direction: row; gap: 6px; z-index: 5; }
+        .action-row { display: flex; gap: 8px; margin-top: 4px; width: 100%; justify-content: center; align-items: center; }
+        .barcode-actions-bottom-right { position: absolute; bottom: 6px; right: 8px; display: flex; flex-direction: row; gap: 6px; z-index: 5; }
         
-        /* Barcode SVG Styling für automatische Anpassung im Vorschaubereich */
-        .barcode-svg-preview { max-width: 100%; width: 100%; height: auto; max-height: 80px; box-sizing: border-box; }
+        .barcode-svg-preview { max-width: 100%; width: 100%; height: auto; max-height: 55px; box-sizing: border-box; }
         .barcode-svg-detail { max-width: 100%; width: auto; height: auto; box-sizing: border-box; }
 
-        /* Roter Header-Bereich auf der Hauptseite */
         .header-banner { background-color: #DC2626; border: 2px solid #000000; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
         h1 { font-size: 22px; color: #ffffff; margin: 0 0 5px 0; }
         .version-tag { font-size: 14px; font-weight: normal; margin-left: 6px; opacity: 0.85; }
@@ -82,36 +63,33 @@
         #app-view { margin-top: 20px; }
         #ios-instruction { display: none; background: #eff6ff; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 13px; border: 2px solid #000000; }
         
-        /* Notiz- & Passwort-spezifische UI Elemente */
-        .note-card { background: white; border: 2px solid #000000; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); width: 90%; margin-left: auto; margin-right: auto; box-sizing: border-box; cursor: pointer; position: relative; }
+        .note-card { background: white; border: 2px solid #000000; border-radius: 10px; padding: 6px 10px; margin-bottom: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); width: 99%; margin-left: auto; margin-right: auto; box-sizing: border-box; cursor: pointer; position: relative; }
         .note-card:active { background-color: #f1f5f9; }
         .note-card.pinned { background-color: #fef9c3; border-color: #ca8a04; }
         
-        /* Bildschirmfüllende Detailansicht */
-        .note-card-fullscreen { background: white; border: 2px solid #000000; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); width: 90%; margin: 0 auto; box-sizing: border-box; position: relative; display: flex; flex-direction: column; min-height: calc(100vh - 140px); }
+        .note-card-fullscreen { background: white; border: 2px solid #000000; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); width: 99%; margin: 0 auto; box-sizing: border-box; position: relative; display: flex; flex-direction: column; min-height: calc(100vh - 140px); }
         .note-full-body-fullscreen { font-size: 15px; color: #1e293b; white-space: pre-wrap; word-break: break-word; margin: 15px 0; line-height: 1.5; flex-grow: 1; }
 
-        .note-preview-body { font-size: 14px; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px; padding-right: 0; }
+        .note-preview-body { font-size: 13px; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0px; padding-right: 155px; }
         .note-full-body { font-size: 15px; color: #1e293b; white-space: pre-wrap; word-break: break-word; margin: 15px 0; line-height: 1.5; }
         
-        .note-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; padding-right: 120px; }
-        .note-title { font-weight: bold; font-size: 16px; color: #0f172a; }
-        .note-date { font-size: 11px; color: #64748b; margin-bottom: 4px; }
+        .note-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0px; padding-right: 155px; }
+        .note-title { font-weight: bold; font-size: 14px; color: #0f172a; }
+        .note-date { font-size: 10px; color: #64748b; margin-bottom: 0px; }
+
+        .note-actions-bottom-right { position: absolute; bottom: 4px; right: 6px; display: flex; flex-direction: row; gap: 3px; z-index: 5; }
         
-        .notes-controls { width: 90%; margin: 0 auto 15px auto; display: flex; gap: 10px; }
+        .notes-controls { width: 99%; margin: 0 auto 15px auto; display: flex; gap: 10px; box-sizing: border-box; }
         .notes-search { flex: 2; padding: 8px 12px; border: 2px solid #000000; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
         .notes-sort { flex: 1; padding: 8px; border: 2px solid #000000; border-radius: 6px; font-size: 14px; background: white; box-sizing: border-box; }
 
-        /* Bestätigungs-Overlay für Löschen */
-        .delete-confirm-box { background: #fee2e2; border: 2px solid #DC2626; padding: 12px; border-radius: 8px; margin-top: 15px; text-align: center; width: 100%; box-sizing: border-box; }
-        .delete-confirm-box p { margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #991b1b; }
+        .delete-confirm-box { background: #fee2e2; border: 2px solid #DC2626; padding: 8px; border-radius: 8px; margin-top: 4px; text-align: center; width: 100%; box-sizing: border-box; }
+        .delete-confirm-box p { margin: 0 0 6px 0; font-size: 12px; font-weight: bold; color: #991b1b; }
 
-        /* Kalender & Layout */
         .date-picker-input { background-color: white; border: 2px solid #000000; border-radius: 6px; width: 50%; margin: 0 auto 10px auto; padding: 10px; font-size: 16px; font-weight: bold; cursor: pointer; display: block; text-align: center; box-shadow: 0 1px 0px #000000; box-sizing: border-box; font-family: inherit; -webkit-appearance: none; }
-        .fullscreen-card { background: white; border: 2px solid #000000; border-radius: 16px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; margin-top: 20px; overflow-x: auto; }
-        hr { border: none; border-top: 2px solid #000000; margin: 20px 0; }
+        .fullscreen-card { background: white; border: 2px solid #000000; border-radius: 16px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; margin-top: 20px; overflow-x: auto; width: 99%; margin-left: auto; margin-right: auto; box-sizing: border-box; }
+        hr { border: none; border-top: 2px solid #000000; margin: 15px 0; }
 
-        /* Schichtplan Container */
         .shift-container { display: flex; overflow-x: auto; gap: 12px; padding-bottom: 20px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
         .month-column { flex: 0 0 calc((100% - 24px) / 3); background: white; border: 2px solid #000; border-radius: 8px; padding: 8px; box-sizing: border-box; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .month-title { font-weight: bold; text-align: center; margin-bottom: 8px; font-size: 13px; border-bottom: 2px solid #000; padding-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #000000; }
@@ -127,7 +105,7 @@
 
     <div id="main-menu">
         <div class="header-banner">
-            <h1>CellWorks-lite<span class="version-tag">V2.08</span></h1>
+            <h1>CellWorks-lite<span class="version-tag">V2.11</span></h1>
             <p class="author-sub">by D. Piskol 2026</p>
         </div>
         
@@ -163,7 +141,6 @@
     <div id="app-view"></div>
 
     <script>
-        // --- SERVICE WORKER REGISTRIERUNG ---
         function registerServiceWorker() {
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('https://dom2702.github.io/CellWorks-lite/sw.js')
@@ -172,7 +149,6 @@
             }
         }
 
-        // --- PERSISTENTEN SPEICHER ANFORDERN ---
         function requestPersistentStorage() {
             if (navigator.storage && navigator.storage.persist) {
                 navigator.storage.persist().then(granted => {
@@ -190,7 +166,6 @@
 
         let currentActiveScreen = 'menu';
 
-        // --- WISCH-BEWEGUNG NACH RECHTS LOGIK ---
         function initSwipeBack() {
             let touchStartX = 0;
             let touchStartY = 0;
@@ -236,11 +211,9 @@
             hint.style.display = hint.style.display === 'block' ? 'none' : 'block';
         }
 
-        // --- SPEICHERFUNKTIONEN ---
         function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
         function loadData(key) { return JSON.parse(localStorage.getItem(key)) || []; }
 
-        // --- EXPORT LOGIK ---
         function triggerExportAsFile() {
             const fullData = { notes: loadData('notes'), barcodes: loadData('barcodes'), passwords: loadData('passwords'), shift_start_date: localStorage.getItem('shift_start_date') };
             const blob = new Blob([JSON.stringify(fullData, null, 2)], { type: 'application/json' });
@@ -251,7 +224,6 @@
             a.click();
         }
 
-        // --- NOTIZEN LOGIK ---
         function showAddNoteScreen() {
             currentActiveScreen = 'notes_add';
             const container = document.getElementById('app-view');
@@ -400,10 +372,10 @@
             const actionArea = document.getElementById(`list-action-${id}`);
             actionArea.innerHTML = `
                 <div class="delete-confirm-box" onclick="event.stopPropagation()">
-                    <p style="font-size: 12px; margin-bottom: 6px;">Löschen bestätigen?</p>
-                    <div style="display: flex; gap: 6px; justify-content: center;">
-                        <button class="btn btn-red" style="margin:0; padding: 4px 8px; font-size: 11px; width: auto;" onclick="deleteNoteFromList(${id}, event)">Ja</button>
-                        <button class="btn btn-secondary" style="margin:0; padding: 4px 8px; font-size: 11px; width: auto;" onclick="renderNotes()">Nein</button>
+                    <p style="font-size: 11px; margin-bottom: 3px;">Löschen bestätigen?</p>
+                    <div style="display: flex; gap: 4px; justify-content: center;">
+                        <button class="btn btn-red" style="margin:0; padding: 2px 6px; font-size: 10px; width: auto;" onclick="deleteNoteFromList(${id}, event)">Ja</button>
+                        <button class="btn btn-secondary" style="margin:0; padding: 2px 6px; font-size: 10px; width: auto;" onclick="renderNotes()">Nein</button>
                     </div>
                 </div>
             `;
@@ -461,22 +433,24 @@
             } else {
                 filtered.forEach(n => {
                     html += `
-                        <div class="note-card ${n.pinned ? 'pinned' : ''}" onclick="showSingleNote(${n.id})" style="padding-top: 45px;">
-                            <button class="btn ${n.pinned ? 'btn-yellow' : 'btn-secondary'}" style="position: absolute; top: 10px; right: 80px; width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="togglePinNote(${n.id}, event)" title="${n.pinned ? 'Loslösen' : 'Anpinnen'}">
-                                📌
-                            </button>
-                            <button class="btn btn-secondary" style="position: absolute; top: 10px; right: 45px; width: auto; padding: 3px 6px; font-size: 12px; margin: 0;" onclick="showEditNoteScreen(${n.id}, event)" title="Notiz bearbeiten">
-                                ✏️
-                            </button>
-                            <button class="btn btn-red" style="position: absolute; top: 10px; right: 10px; width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="showListDeleteConfirm(${n.id}, event)" title="Notiz löschen">
-                                <span style="color: #ef4444;">🗑️</span>
-                            </button>
-
-                            <div class="note-header">
+                        <div class="note-card ${n.pinned ? 'pinned' : ''}" onclick="showSingleNote(${n.id})" style="padding-bottom: 22px;">
+                            <div class="note-header" style="padding-right: 90px;">
                                 <span class="note-title">${n.title}</span>
                             </div>
                             <div class="note-date">${n.date}</div>
                             <div class="note-preview-body">${n.text}</div>
+
+                            <div class="note-actions-bottom-right">
+                                <button class="btn ${n.pinned ? 'btn-yellow' : 'btn-secondary'}" style="width: auto; padding: 2px 5px; font-size: 10px; margin: 0;" onclick="togglePinNote(${n.id}, event)" title="${n.pinned ? 'Loslösen' : 'Anpinnen'}">
+                                    📌
+                                </button>
+                                <button class="btn btn-secondary" style="width: auto; padding: 2px 5px; font-size: 10px; margin: 0;" onclick="showEditNoteScreen(${n.id}, event)" title="Notiz bearbeiten">
+                                    ✏️
+                                </button>
+                                <button class="btn btn-red" style="width: auto; padding: 2px 5px; font-size: 10px; margin: 0;" onclick="showListDeleteConfirm(${n.id}, event)" title="Notiz löschen">
+                                    <span style="color: #ef4444;">🗑️</span>
+                                </button>
+                            </div>
                             
                             <div class="action-row" id="list-action-${n.id}"></div>
                         </div>
@@ -487,8 +461,13 @@
             listContainer.innerHTML = html;
         }
 
-        // --- PASSWÖRTER LOGIK ---
         let pwdVisibilityState = {};
+
+        function togglePasswordVisibility(id, event) {
+            if (event) event.stopPropagation();
+            pwdVisibilityState[id] = !pwdVisibilityState[id];
+            renderPasswords();
+        }
 
         function convertPasswordToBarcode(id, event) {
             if (event) event.stopPropagation();
@@ -609,9 +588,25 @@
             }
         }
 
-        function togglePasswordVisibilityInList(id, event) {
-            if (event) event.stopPropagation();
-            pwdVisibilityState[id] = !pwdVisibilityState[id];
+        function showListDeleteConfirmPassword(id, event) {
+            event.stopPropagation();
+            const actionArea = document.getElementById(`pwd-list-action-${id}`);
+            actionArea.innerHTML = `
+                <div class="delete-confirm-box" onclick="event.stopPropagation()">
+                    <p style="font-size: 11px; margin-bottom: 3px;">Löschen bestätigen?</p>
+                    <div style="display: flex; gap: 4px; justify-content: center;">
+                        <button class="btn btn-red" style="margin:0; padding: 2px 6px; font-size: 10px; width: auto;" onclick="deletePasswordFromList(${id}, event)">Ja</button>
+                        <button class="btn btn-secondary" style="margin:0; padding: 2px 6px; font-size: 10px; width: auto;" onclick="renderPasswords()">Nein</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function deletePasswordFromList(id, event) {
+            event.stopPropagation();
+            let passwords = loadData('passwords');
+            passwords = passwords.filter(p => p.id !== id);
+            saveData('passwords', passwords);
             renderPasswords();
         }
 
@@ -711,29 +706,37 @@
                 html += `<p style="text-align: center; color: #64748b;">Keine Passwörter gefunden.</p>`;
             } else {
                 filtered.forEach(p => {
-                    const isVisible = !!pwdVisibilityState[p.id];
-                    const maskedPass = p.password ? '•'.repeat(Math.max(p.password.length, 6)) : '••••••';
-                    const displayPassText = isVisible ? p.password : maskedPass;
+                    const isVisible = pwdVisibilityState[p.id];
+                    const displayPass = isVisible ? (p.password || '-') : (p.password ? '•'.repeat(Math.max(p.password.length, 6)) : '••••••');
 
                     html += `
-                        <div class="note-card ${p.pinned ? 'pinned' : ''}" onclick="showSinglePassword(${p.id})">
-                            <button class="btn ${p.pinned ? 'btn-yellow' : 'btn-secondary'}" style="position: absolute; top: 10px; right: 10px; width: auto; padding: 2px 6px; font-size: 14px; margin: 0;" onclick="togglePinPassword(${p.id}, event)" title="${p.pinned ? 'Loslösen' : 'Anpinnen'}">
-                                📌
-                            </button>
-                            <button class="btn btn-secondary" style="position: absolute; top: 40px; right: 10px; width: auto; padding: 2px 6px; font-size: 14px; margin: 0;" onclick="togglePasswordVisibilityInList(${p.id}, event)" title="Passwort anzeigen/verbergen">
-                                ${isVisible ? '🙈' : '👁️'}
-                            </button>
-                            <button class="btn btn-secondary" style="position: absolute; top: 70px; right: 10px; width: auto; padding: 2px 6px; font-size: 14px; margin: 0;" onclick="convertPasswordToBarcode(${p.id}, event)" title="Als Barcode speichern">
-                                📊
-                            </button>
-
-                            <div class="note-header">
+                        <div class="note-card ${p.pinned ? 'pinned' : ''}" onclick="showSinglePassword(${p.id})" style="padding-bottom: 22px;">
+                            <div class="note-header" style="padding-right: 155px;">
                                 <span class="note-title">${p.title}</span>
                             </div>
-                            <div class="note-preview-body" style="padding-right: 50px;">
-                                <strong>Benutzer:</strong> ${p.username || '-'}<br>
-                                <strong>Passwort:</strong> ${displayPassText}
+                            <div class="note-preview-body" style="padding-right: 155px;">
+                                <strong>Benutzer:</strong> ${p.username || '-'} | <strong>Passwort:</strong> ${displayPass}
                             </div>
+
+                            <div class="note-actions-bottom-right">
+                                <button class="btn ${p.pinned ? 'btn-yellow' : 'btn-secondary'}" style="width: auto; padding: 2px 5px; font-size: 10px; margin: 0;" onclick="togglePinPassword(${p.id}, event)" title="${p.pinned ? 'Loslösen' : 'Anpinnen'}">
+                                    📌
+                                </button>
+                                <button class="btn btn-secondary" style="width: auto; padding: 2px 5px; font-size: 10px; margin: 0;" onclick="convertPasswordToBarcode(${p.id}, event)" title="Als Barcode speichern">
+                                    📊
+                                </button>
+                                <button class="btn btn-red" style="width: auto; padding: 2px 5px; font-size: 10px; margin: 0;" onclick="showListDeleteConfirmPassword(${p.id}, event)" title="Passwort löschen">
+                                    <span style="color: #ef4444;">🗑️</span>
+                                </button>
+                                <button class="btn btn-secondary" style="width: auto; padding: 2px 5px; font-size: 10px; margin: 0;" onclick="showEditPasswordScreen(${p.id}, event)" title="Passwort bearbeiten">
+                                    ✏️
+                                </button>
+                                <button class="btn btn-secondary" style="width: auto; padding: 2px 5px; font-size: 10px; margin: 0;" onclick="togglePasswordVisibility(${p.id}, event)" title="${isVisible ? 'Passwort verbergen' : 'Passwort anzeigen'}">
+                                    ${isVisible ? '🔒' : '👁️'}
+                                </button>
+                            </div>
+
+                            <div class="action-row" id="pwd-list-action-${p.id}"></div>
                         </div>
                     `;
                 });
@@ -742,7 +745,6 @@
             listContainer.innerHTML = html;
         }
 
-        // --- BARCODE LOGIK ---
         function showAddBarcodeScreen() {
             currentActiveScreen = 'barcodes_add';
             const container = document.getElementById('app-view');
@@ -820,10 +822,10 @@
             const actionRow = document.getElementById(`barcode-action-row-${id}`);
             actionRow.innerHTML = `
                 <div class="delete-confirm-box" onclick="event.stopPropagation()">
-                    <p style="font-size: 12px; margin-bottom: 6px;">Löschen bestätigen?</p>
-                    <div style="display: flex; gap: 6px; justify-content: center;">
-                        <button class="btn btn-red" style="margin:0; padding: 4px 8px; font-size: 11px; width: auto;" onclick="deleteBarcode(${id}, event)">Ja</button>
-                        <button class="btn btn-secondary" style="margin:0; padding: 4px 8px; font-size: 11px; width: auto;" onclick="renderBarcodes()">Nein</button>
+                    <p style="font-size: 11px; margin-bottom: 3px;">Löschen bestätigen?</p>
+                    <div style="display: flex; gap: 4px; justify-content: center;">
+                        <button class="btn btn-red" style="margin:0; padding: 2px 6px; font-size: 10px; width: auto;" onclick="deleteBarcode(${id}, event)">Ja</button>
+                        <button class="btn btn-secondary" style="margin:0; padding: 2px 6px; font-size: 10px; width: auto;" onclick="renderBarcodes()">Nein</button>
                     </div>
                 </div>
             `;
@@ -889,16 +891,16 @@
                 barcodes.forEach((b) => {
                     const uniqueId = b.id;
                     html += `
-                        <div class="card ${b.pinned ? 'pinned' : ''}" onclick="showSingleBarcode('${b.value}')" style="padding-bottom: 40px; overflow: hidden;">
+                        <div class="card ${b.pinned ? 'pinned' : ''}" onclick="showSingleBarcode('${b.value}')" style="padding-bottom: 30px; overflow: hidden;">
                             <svg id="barcode-${uniqueId}" class="barcode-svg-preview"></svg>
                             <div class="barcode-actions-bottom-right">
-                                <button class="btn ${b.pinned ? 'btn-yellow' : 'btn-secondary'}" style="width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="togglePinBarcode(${uniqueId}, event)" title="${b.pinned ? 'Loslösen' : 'Anpinnen'}">
+                                <button class="btn ${b.pinned ? 'btn-yellow' : 'btn-secondary'}" style="width: auto; padding: 2px 5px; font-size: 10px; margin: 0;" onclick="togglePinBarcode(${uniqueId}, event)" title="${b.pinned ? 'Loslösen' : 'Anpinnen'}">
                                     📌
                                 </button>
-                                <button class="btn btn-secondary" style="width: auto; padding: 3px 6px; font-size: 12px; margin: 0;" onclick="showEditBarcodeScreen(${uniqueId}, event)" title="Barcode bearbeiten">
+                                <button class="btn btn-secondary" style="width: auto; padding: 2px 5px; font-size: 10px; margin: 0;" onclick="showEditBarcodeScreen(${uniqueId}, event)" title="Barcode bearbeiten">
                                     ✏️
                                 </button>
-                                <button class="btn btn-red" style="width: auto; padding: 3px 6px; font-size: 11px; margin: 0;" onclick="showBarcodeDeleteConfirm(${uniqueId}, event)" title="Barcode löschen">
+                                <button class="btn btn-red" style="width: auto; padding: 2px 5px; font-size: 10px; margin: 0;" onclick="showBarcodeDeleteConfirm(${uniqueId}, event)" title="Barcode löschen">
                                     <span style="color: #ef4444;">🗑️</span>
                                 </button>
                             </div>
@@ -912,14 +914,13 @@
 
             barcodes.forEach((b) => {
                 try {
-                    JsBarcode(`#barcode-${b.id}`, b.value, { format: "CODE128", width: 2, height: 50, displayValue: true, flat: true });
+                    JsBarcode(`#barcode-${b.id}`, b.value, { format: "CODE128", width: 2, height: 40, displayValue: true, flat: true });
                 } catch (e) {
                     console.error("Fehler beim Rendern:", b.value, e);
                 }
             });
         }
 
-        // --- SCHICHTPLAN LOGIK ---
         function renderShiftplan() {
             const startDateStr = localStorage.getItem('shift_start_date');
             if (!startDateStr) return "<p>Bitte erst das Startdatum in den Einstellungen festlegen.</p>";
@@ -972,7 +973,6 @@
             return html;
         }
 
-        // --- SCHICHTPLAN KLICK LOGIK ---
         function handleShiftplanClick() {
             const hasOpenedBefore = localStorage.getItem('shiftplan_opened_before');
             
@@ -1042,7 +1042,6 @@
             }
         }
 
-        // --- IMPORT ---
         function triggerImport() { document.getElementById('import-file').click(); }
 
         function importData(event) {
@@ -1063,7 +1062,6 @@
             reader.readAsText(file);
         }
 
-        // --- NAVIGATION ---
         function showScreen(screen) {
             currentActiveScreen = screen;
             const container = document.getElementById('app-view');
@@ -1130,7 +1128,7 @@ Es ist dir untersagt:
 
 Die App zu dekompilieren, zu disassemblieren, zu reverse-engineern oder zu versuchen, den Quellcode der App abzuleiten (sofern dies nicht durch zwingendes Recht ausdrücklich gestattet ist).
 
-Die App zu vermieten, zu verleasen, zu unterlizenzieren oder kommerziell zu vertreiben.
+Die App zu vermieten, zu leasen, zu unterlizenzieren oder kommerziell zu vertreiben.
 
 Änderungen, Übersetzungen oder abgeleitete Werke der App zu erstellen.
 
