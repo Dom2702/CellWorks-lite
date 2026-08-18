@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cellworks-v1';
+const CACHE_NAME = 'cellworks-lite-v2.11';
 const ASSETS_TO_CACHE = [
   'https://dom2702.github.io/CellWorks-lite/',
   'https://dom2702.github.io/CellWorks-lite/index.html',
