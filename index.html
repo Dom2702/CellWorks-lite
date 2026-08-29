@@ -93,19 +93,67 @@
         .shift-container { display: flex; overflow-x: auto; gap: 12px; padding-bottom: 20px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
         .month-column { flex: 0 0 calc((100% - 24px) / 3); background: white; border: 2px solid #000; border-radius: 8px; padding: 8px; box-sizing: border-box; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .month-title { font-weight: bold; text-align: center; margin-bottom: 8px; font-size: 13px; border-bottom: 2px solid #000; padding-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #000000; }
-        .day-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; margin-bottom: 3px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid rgba(0,0,0,0.1); color: #000000; }
-        .shift-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; text-align: center; min-width: 16px; }
+        
+        /* ANPASSUNG: Festes Raster für die Zeilen, damit sich Dropdowns perfekt an den Schichttagen rechts orientieren */
+        .day-row { display: grid; grid-template-columns: 58px 1fr auto; align-items: center; padding: 4px 6px; margin-bottom: 3px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid rgba(0,0,0,0.1); color: #000000; gap: 4px; }
+        .shift-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; text-align: center; min-width: 16px; justify-self: end; }
         .F { background-color: #22c55e; } 
         .S { background-color: #eab308; } 
         .N { background-color: #3b82f6; } 
         .X { background-color: #94a3b8; } 
+
+        .day-select-container { display: flex; justify-content: center; align-items: center; width: 100%; }
+        .day-select { font-size: 10px; padding: 1px 3px; border: 1px solid #000; border-radius: 4px; background: #f8fafc; font-weight: bold; font-family: inherit; cursor: pointer; }
+        
+        .extracted-days-container { 
+            background: #f58631; 
+            color: #ffffff; 
+            border: 2px solid #000000; 
+            border-radius: 12px; 
+            padding: 12px 15px; 
+            margin-bottom: 15px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            box-sizing: border-box;
+            width: 100%;
+        }
+        .extracted-days-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 2px solid #000; padding-bottom: 6px; }
+        
+        .extracted-items-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .extracted-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background: white;
+            border: 1.5px solid #000000;
+            border-radius: 6px;
+            padding: 4px 10px;
+            min-width: 45px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .extracted-item-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #1e293b;
+        }
+        .extracted-item-count {
+            font-size: 13px;
+            font-weight: 900;
+            color: #ea580c;
+        }
     </style>
 </head>
 <body onload="initSwipeBack(); registerServiceWorker(); requestPersistentStorage();">
 
     <div id="main-menu">
         <div class="header-banner">
-            <h1>CellWorks-lite<span class="version-tag">V2.12</span></h1>
+            <h1>CellWorks-lite<span class="version-tag">V2.2</span></h1>
             <p class="author-sub">by D. Piskol 2026</p>
         </div>
         
@@ -166,6 +214,7 @@
         const weekdayNames = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
         let currentActiveScreen = 'menu';
+        let selectedExtractedYear = new Date().getFullYear();
 
         function initSwipeBack() {
             let touchStartX = 0;
@@ -214,9 +263,16 @@
 
         function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
         function loadData(key) { return JSON.parse(localStorage.getItem(key)) || []; }
+        function loadMap(key) { return JSON.parse(localStorage.getItem(key)) || {}; }
 
         function triggerExportAsFile() {
-            const fullData = { notes: loadData('notes'), barcodes: loadData('barcodes'), passwords: loadData('passwords'), shift_start_date: localStorage.getItem('shift_start_date') };
+            const fullData = { 
+                notes: loadData('notes'), 
+                barcodes: loadData('barcodes'), 
+                passwords: loadData('passwords'), 
+                shift_start_date: localStorage.getItem('shift_start_date'),
+                day_selections: loadMap('day_selections')
+            };
             const blob = new Blob([JSON.stringify(fullData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -922,6 +978,125 @@
             });
         }
 
+        function calculateHolidays(year) {
+            const a = year % 19;
+            const b = Math.floor(year / 100);
+            const c = year % 100;
+            const d = Math.floor(b / 4);
+            const e = b % 4;
+            const f = Math.floor((b + 8) / 25);
+            const g = Math.floor((b - f + 1) / 3);
+            const h = (19 * a + b - d - g + 15) % 30;
+            const i = Math.floor(c / 4);
+            const k = c % 4;
+            const l = (32 + 2 * e + 2 * i - h - k) % 7;
+            const m = Math.floor((a + 11 * h + 22 * l) / 451);
+            const monthOster = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+            const dayOster = ((h + l - 7 * m + 114) % 31) + 1;
+            
+            const osterSo = new Date(Date.UTC(year, monthOster, dayOster));
+            
+            const addDays = (date, days) => {
+                const result = new Date(date);
+                result.setUTCDate(result.getUTCDate() + days);
+                return result;
+            };
+
+            const formatDateKey = (date) => {
+                const y = date.getUTCFullYear();
+                const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+                const d = String(date.getUTCDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            };
+
+            let holidays = {
+                [`${year}-01-01`]: "Neujahr",
+                [`${year}-05-01`]: "Tag der Arbeit",
+                [`${year}-10-03`]: "Tag der Deutschen Einheit",
+                [`${year}-10-31`]: "Reformationstag",
+                [`${year}-12-25`]: "1. Weihnachtstag",
+                [`${year}-12-26`]: "2. Weihnachtstag"
+            };
+
+            holidays[formatDateKey(addDays(osterSo, -2))] = "Karfreitag";
+            holidays[formatDateKey(addDays(osterSo, 1))] = "Ostermontag";
+            holidays[formatDateKey(addDays(osterSo, 39))] = "Christi Himmelfahrt";
+            holidays[formatDateKey(addDays(osterSo, 50))] = "Pfingstmontag";
+
+            return holidays;
+        }
+
+        function getISOWeek(date) {
+            const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return weekNo;
+        }
+
+        function handleDaySelectionChange(dateKey, selectElem) {
+            const val = selectElem.value;
+            let selections = loadMap('day_selections');
+            if (val) {
+                selections[dateKey] = val;
+            } else {
+                delete selections[dateKey];
+            }
+            saveData('day_selections', selections);
+            renderExtractedDaysSection();
+        }
+
+        function changeExtractedYear(selectElem) {
+            selectedExtractedYear = parseInt(selectElem.value);
+            renderExtractedDaysSection();
+        }
+
+        function renderExtractedDaysSection() {
+            const container = document.getElementById('extracted-days-content');
+            if (!container) return;
+
+            let selections = loadMap('day_selections');
+            let currentYearStr = String(selectedExtractedYear);
+
+            let counts = {};
+            Object.keys(selections).forEach(dateKey => {
+                if (dateKey.startsWith(currentYearStr)) {
+                    let val = selections[dateKey];
+                    if (val) {
+                        counts[val] = (counts[val] || 0) + 1;
+                    }
+                }
+            });
+
+            let html = `<div class="extracted-days-header">
+                            <span><strong>Entnommene Tage (Summe)</strong></span>
+                            <select class="day-select" style="font-size: 12px; padding: 4px 8px;" onchange="changeExtractedYear(this)">`;
+            
+            let currY = new Date().getFullYear();
+            for (let y = currY - 2; y <= currY + 2; y++) {
+                html += `<option value="${y}" ${y === selectedExtractedYear ? 'selected' : ''}>${y}</option>`;
+            }
+            html += `</select></div>`;
+
+            let keys = Object.keys(counts);
+            if (keys.length === 0) {
+                html += `<div style="text-align: center; color: #ffffff; font-size: 13px; margin: 5px 0;">Keine Tage für ${selectedExtractedYear} eingetragen.</div>`;
+            } else {
+                html += `<div class="extracted-items-grid">`;
+                keys.forEach(k => {
+                    html += `
+                        <div class="extracted-item">
+                            <span class="extracted-item-label">${k}</span>
+                            <span class="extracted-item-count">${counts[k]}</span>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
         function renderShiftplan() {
             const startDateStr = localStorage.getItem('shift_start_date');
             if (!startDateStr) return "<p>Bitte erst das Startdatum in den Einstellungen festlegen.</p>";
@@ -935,14 +1110,26 @@
             let startYear = now.getFullYear();
             let startMonth = now.getMonth() - 1;
             
-            let html = `<h3>Schichtplan (Monatsansicht)</h3>
+            let html = ``;
+            
+            html += `<div class="extracted-days-container" id="extracted-days-content"></div>`;
+
+            html += `<h3>Schichtplan (Monatsübersicht)</h3>
                         <div class="shift-container" id="scroll-box">`;
             
+            let holidayCache = {};
+            let selections = loadMap('day_selections');
+
             for (let m = 0; m < 24; m++) {
                 let targetDate = new Date(startYear, startMonth + m, 1);
                 let y = targetDate.getFullYear();
                 let monthIdx = targetDate.getMonth();
                 
+                if (!holidayCache[y]) {
+                    holidayCache[y] = calculateHolidays(y);
+                }
+                let currentYearHolidays = holidayCache[y];
+
                 let isCurrentMonth = (now.getFullYear() === y && now.getMonth() === monthIdx);
                 
                 html += `<div class="month-column" ${isCurrentMonth ? 'id="current-month-col"' : ''}>
@@ -961,9 +1148,32 @@
                     
                     let isToday = (today.getTime() === d.getTime());
                     let weekdayStr = weekdayNames[d.getUTCDay()];
+                    let weekNum = getISOWeek(d);
                     
-                    html += `<div class="day-row" style="${isToday ? 'border: 3px solid #DC2626; font-weight: 900;' : ''}">
-                                <span>${weekdayStr}, ${day}.</span>
+                    let dateKey = `${y}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    let isHoliday = currentYearHolidays[dateKey] !== undefined;
+                    let currentSelection = selections[dateKey] || "";
+
+                    let rowStyle = "";
+                    if (isToday) {
+                        rowStyle = 'border: 3px solid #DC2626; font-weight: 900;';
+                    } else if (isHoliday) {
+                        rowStyle = 'color: #DC2626; font-weight: 900; background-color: #fee2e2;';
+                    }
+                    
+                    /* ANPASSUNG: Nutzt das CSS-Grid, wodurch Datum, Dropdown und Schicht-Badge exakt in Spalten ausgerichtet sind */
+                    html += `<div class="day-row" style="${rowStyle}">
+                                <span><span style="color: #2563EB;">[${weekNum}]</span> ${weekdayStr}, ${day}.</span>
+                                <div class="day-select-container">
+                                    <select class="day-select" onchange="handleDaySelectionChange('${dateKey}', this)">
+                                        <option value="">-</option>
+                                        <option value="TU" ${currentSelection === 'TU' ? 'selected' : ''}>TU</option>
+                                        <option value="FRT" ${currentSelection === 'FRT' ? 'selected' : ''}>FRT</option>
+                                        <option value="AFT" ${currentSelection === 'AFT' ? 'selected' : ''}>AFT</option>
+                                        <option value="SRX" ${currentSelection === 'SRX' ? 'selected' : ''}>SRX</option>
+                                        <option value="son." ${currentSelection === 'son.' ? 'selected' : ''}>son.</option>
+                                    </select>
+                                </div>
                                 <span class="shift-badge ${type}">${shortLabel}</span>
                              </div>`;
                 }
@@ -971,6 +1181,7 @@
             }
             
             html += `</div><p><small>← Horizontal wischen, um weitere Monate zu sehen →</small></p>`;
+            
             return html;
         }
 
@@ -1056,6 +1267,7 @@
                     if (importedData.barcodes) saveData('barcodes', importedData.barcodes);
                     if (importedData.passwords) saveData('passwords', importedData.passwords);
                     if (importedData.shift_start_date) localStorage.setItem('shift_start_date', importedData.shift_start_date);
+                    if (importedData.day_selections) saveData('day_selections', importedData.day_selections);
                     alert("Daten importiert!");
                     showScreen('settings');
                 } catch (err) { alert("Fehler beim Import."); }
@@ -1084,6 +1296,7 @@
             } else if (screen === 'shiftplan') {
                 html += renderShiftplan();
                 container.innerHTML = html;
+                renderExtractedDaysSection();
                 
                 setTimeout(() => {
                     const scrollBox = document.getElementById('scroll-box');
@@ -1164,7 +1377,7 @@ Die Haftung des Entwicklers für leichte Fahrlässigkeit ist – soweit gesetzli
 Der Entwickler haftet nicht für direkte oder indirekte Schäden, Datenverluste, entgangenen Gewinn oder Sachschäden, die aus der Nutzung oder der Unmöglichkeit der Nutzung der App entstehen (es sei denn, es liegt Vorsatz oder grobe Fahrlässigkeit des Entwicklers vor bzw. es betrifft zwingende gesetzliche Haftungsvorschriften wie das Produkthaftungsgesetz).
 
 5. Anwendbares Recht
-Es gilt das Recht des Landes, in dem der Entwickler seinen Wohnsitz hat (Standard: deutsches Recht, sofern kein Verbraucherschutzrecht deines Wohnsitzlandes zwingend entgegensteht).
+Es gilt das Recht des Landes, in dem der Entwickler seinen Wohnsitz hat (Standard: deutsches Recht, sofern kein Verbraucherschutzrecht dein Wohnsitzland zwingend entgegensteht).
 
 6. Änderungen der Bedingungen
 Der Entwickler behält sich das Recht vor, diese AGB/EULA jederzeit zu aktualisieren. Die jeweils aktuelle Version wird in der App oder im entsprechenden Store veröffentlicht. Durch die fortgesetzte Nutzung der App nach Änderungen akzeptierst du die neuen Bedingungen.
@@ -1205,22 +1418,7 @@ Die App benötigt je nach genutzter Funktion ggf. Zugriff auf:
 Speicher/Dateisystem: Ausschließlich zum Speichern und Laden von manuell exportierten Backup-Dateien.
 
 6. Deine Rechte
-Da sämtliche Daten lokal auf deinem Gerät gespeichert werden und uns keine Daten vorliegen, kannst du deine Daten jederzeit eigenständig verwalten oder löschen, indem du:
-
-Einträge direkt in der App löschst oder bearbeitst.
-
-Die App-Daten in den Einstellungen deines Betriebssystems (App-Info -> Speicher löschen) vollständig zurücksetzt.
-
--------------------------------------
-
-Impressum:
-Dominik Piskol
-Über dem Westerhofe 43a
-31185 Söhlde
-user2702@gmx.de</div>`;
-                container.innerHTML = html;
-            } else {
-                html += `## ${screen.toUpperCase()}\n<p>In Arbeit...</p>`;
+Da sämtliche Daten lokal auf deinem Gerät gespeichert werden und uns keine Daten vorliegen, kannst du deine Rechte jederzeit eigenständig ausüben oder Daten löschen, indem du Einträge direkt in der App löschst.</div>`;
                 container.innerHTML = html;
             }
         }
